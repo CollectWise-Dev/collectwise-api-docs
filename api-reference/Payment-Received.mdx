@@ -1,0 +1,27 @@
+---
+title: 'Payment Received Webhook'
+description: 'The Payment Received webhook notifies you whenever a payment is made for a debtor, whether it’s a subscription portion, a partial amount, or the full balance. This helps automate processes and ensures your systems are always updated with the latest payment activities.
+'
+---
+
+## Webhook Notification
+
+The webhook will send a payload containing the debtor ID and payment details to your configured endpoint.
+
+## Example Payload
+
+```json
+{
+  "event": "payment_received",
+  "debtorId": "123456",
+  "payment": {
+    "amount": 150.00,
+    "totalDebtAmount": 600.00,
+    "currency": "USD",
+    "paymentDate": "2024-10-31",
+    "paymentType": "subscription-payment"
+  }
+}
+
+```
+Send us your endpoint to configure this webhook for your integration.

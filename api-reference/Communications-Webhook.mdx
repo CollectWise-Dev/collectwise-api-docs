@@ -1,0 +1,55 @@
+---
+title: 'Communications Webhook'
+description: 'Details about the Communications webhook for real-time updates on interactions with debtors.'
+---
+
+## Communications Webhook
+
+The Communications webhook provides updates whenever an interaction occurs between CollectWise and a debtor. This includes inbound and outbound SMS or email messages, as well as notifications when a phone call has taken place. Note that phone call events do not specify whether the call was inbound or outbound. The webhook also includes the total number of SMS, emails, or phone communications sent to date.
+
+## Webhook Notification
+
+The webhook sends a payload containing the details of the communication, including the debtor ID, type of communication, and timestamp.
+
+*Note: Phone call events do not include a direction attribute.*
+
+## Example Payloads
+
+**SMS Example:**
+```json
+{
+  "event": "communication",
+  "debtorId": "123456",
+  "communication": {
+    "type": "sms",
+    "direction": "outbound",
+    "timestamp": "2024-10-31T14:30:00Z"
+  },
+  "totalCommunications": {
+    "sms": 15,
+    "email": 8,
+    "phone": 3
+  }
+}
+```
+
+**Call Example:**
+```json
+{
+  "event": "communication",
+  "debtorId": "123456",
+  "communication": {
+    "type": "phone",
+    "timestamp": "2024-10-31T15:45:00Z"
+  },
+  "totalCommunications": {
+    "sms": 15,
+    "email": 8,
+    "phone": 3
+  }
+}
+```
+
+
+
+Send us your endpoint to configure this webhook for your integration.
