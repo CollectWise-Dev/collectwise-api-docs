@@ -1,0 +1,57 @@
+---
+title: 'Debtor Object'
+description: 'The Debtor object represents a debtor in the CollectWise system. It contains all the relevant information about a debtor and their debt.'
+---
+
+## Debtor Object Properties
+
+The Debtor object contains the following properties:
+
+### Required Properties
+- **debtorId**: `string` – Unique identifier of the debtor
+- **debtorName**: `string` – Full name of the debtor
+- **totalUnpaidDebt**: `number` – Total amount of unpaid debt
+- **delinquencyDate**: `string (date)` – Date when the debt became delinquent
+- **phoneNumber**: `string` – Contact phone number of the debtor
+- **email**: `string` – Email address of the debtor
+- **productOrService**: `string` – Name of the product or service delivered to the debtor
+- **creditorName**: `string` – Name of the creditor
+
+### Optional Properties
+- **accountNumber**: `string` – Account number associated with the debt
+- **address**: `string` – Street address of the debtor
+- **city**: `string` – City of the debtor
+- **state**: `string` – State of the debtor
+- **zipCode**: `string` – ZIP code of the debtor
+- **ssn**: `string` – Social Security Number of the debtor
+- **lastPayDate**: `string (date)` – Date of the last payment made by the debtor
+- **chargeOffDate**: `string (date)` – Date when the debt was charged off, if applicable
+- **interestDue**: `number` – Amount of interest due on the debt
+- **principalDue**: `number` – Amount of principal due on the debt
+- **otherFees**: `number` – Other fees associated with the debt
+- **amountPaid**: `number` – Total amount paid by the debtor so far
+
+---
+
+### Example Debtor Object
+
+```json
+{
+  "debtorId": "123456",
+  "debtorName": "John Doe",
+  "totalUnpaidDebt": 5000.00,
+  "delinquencyDate": "2023-01-15",
+  "phoneNumber": "+1234567890",
+  "email": "johndoe@example.com",
+  "productOrService": "Credit Card",
+  "creditorName": "ABC Bank",
+  "accountNumber": "ACC123456",
+  "address": "123 Main St",
+  "city": "Anytown",
+  "state": "CA",
+  "zipCode": "12345",
+  "lastPayDate": "2022-12-01",
+  "interestDue": 250.00,
+  "principalDue": 4750.00,
+  "amountPaid": 1000.00
+}

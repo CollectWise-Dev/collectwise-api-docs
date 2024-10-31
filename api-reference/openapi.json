@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
+    "title": "CollectWise API",
+    "description": "An API for managing debtors, tracking statuses, and automating debt collection processes",
     "license": {
       "name": "MIT"
     },
@@ -10,18 +10,18 @@
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://api.collectwise.com"
     }
   ],
   "security": [
     {
-      "bearerAuth": []
+      "apiKey": []
     }
   ],
   "paths": {
-    "/plants": {
+    "/debtor": {
       "get": {
-        "description": "Returns all plants from the system that the user has access to",
+        "description": "Returns all debtors from the system that the user has access to",
         "parameters": [
           {
             "name": "limit",
@@ -35,13 +35,13 @@
         ],
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Debtor response",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Plant"
+                    "$ref": "#/components/schemas/DebtorResponse"
                   }
                 }
               }
@@ -60,13 +60,13 @@
         }
       },
       "post": {
-        "description": "Creates a new plant in the store",
+        "description": "Creates a new debtor record",
         "requestBody": {
-          "description": "Plant to add to the store",
+          "description": "Debtor information to add",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "$ref": "#/components/schemas/NewDebtor"
               }
             }
           },
@@ -74,17 +74,17 @@
         },
         "responses": {
           "200": {
-            "description": "plant response",
+            "description": "Debtor response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/DebtorResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "unexpected error",
+            "description": "Unexpected error",
             "content": {
               "application/json": {
                 "schema": {
@@ -96,28 +96,201 @@
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/debtor/{debtorId}": {
+      "get": {
+        "summary": "Get a debtor by ID",
+        "description": "Retrieve the details of a specific debtor using their unique identifier",
         "parameters": [
           {
-            "name": "id",
+            "name": "debtorId",
             "in": "path",
-            "description": "ID of plant to delete",
             "required": true,
+            "description": "Unique identifier of the debtor to retrieve",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
             }
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
+          "200": {
+            "description": "Debtor details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Debtor not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a debtor",
+        "description": "Update an existing debtor's information",
+        "parameters": [
+          {
+            "name": "debtorId",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier of the debtor to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Updated debtor information",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DebtorUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Debtor successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtorResponse"
+                }
+              }
+            }
           },
           "400": {
-            "description": "unexpected error",
+            "description": "Bad request - Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Debtor not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a debtor",
+        "description": "Delete a debtor using their unique identifier",
+        "parameters": [
+          {
+            "name": "debtorId",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier of the debtor to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Debtor successfully deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Debtor successfully deleted"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Debtor not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/debtors": {
+      "post": {
+        "summary": "Create multiple debtors",
+        "description": "Creates multiple debtor records in bulk",
+        "requestBody": {
+          "description": "Array of debtor information to add",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/NewDebtor"
+                },
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bulk debtor creation response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "createdDebtors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DebtorResponse"
+                      }
+                    },
+                    "failedDebtors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "integer",
+                            "description": "Index of the failed debtor in the input array"
+                          },
+                          "error": {
+                            "$ref": "#/components/schemas/Error"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input",
             "content": {
               "application/json": {
                 "schema": {
@@ -132,63 +305,213 @@
   },
   "components": {
     "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
+      "DebtorUpdate": {
         "type": "object",
         "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
+          "debtorName": {
+            "type": "string",
+            "description": "Updated name of the debtor"
           },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
+          "totalUnpaidDebt": {
+            "type": "number",
+            "format": "float",
+            "description": "Updated total unpaid debt amount"
+          },
+          "delinquencyDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Updated date when the debt became delinquent"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Updated contact phone number of the debtor"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Updated email address of the debtor"
+          },
+          "productOrService": {
+            "type": "string",
+            "description": "Updated name of the product or service delivered to the debtor"
+          },
+          "creditorName": {
+            "type": "string",
+            "description": "Updated name of the creditor"
+          },
+          "accountNumber": {
+            "type": "string",
+            "description": "Updated account number associated with the debt"
+          },
+          "address": {
+            "type": "string",
+            "description": "Updated street address of the debtor"
+          },
+          "city": {
+            "type": "string",
+            "description": "Updated city of the debtor"
+          },
+          "state": {
+            "type": "string",
+            "description": "Updated state of the debtor"
+          },
+          "zipCode": {
+            "type": "string",
+            "description": "Updated ZIP code of the debtor"
+          },
+          "ssn": {
+            "type": "string",
+            "description": "Updated Social Security Number of the debtor"
+          },
+          "lastPayDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Updated date of the last payment made by the debtor"
+          },
+          "chargeOffDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Updated date when the debt was charged off, if applicable"
+          },
+          "interestDue": {
+            "type": "number",
+            "format": "float",
+            "description": "Updated amount of interest due on the debt"
+          },
+          "principalDue": {
+            "type": "number",
+            "format": "float",
+            "description": "Updated amount of principal due on the debt"
+          },
+          "otherFees": {
+            "type": "number",
+            "format": "float",
+            "description": "Updated other fees associated with the debt"
+          },
+          "amountPaid": {
+            "type": "number",
+            "format": "float",
+            "description": "Updated total amount paid by the debtor so far"
           }
         }
       },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
+      "DebtorResponse": {
+        "type": "object",
+        "properties": {
+          "debtorId": {
+            "type": "string",
+            "description": "Unique identifier of the debtor"
           },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
-            }
+          "debtorName": {
+            "type": "string",
+            "description": "Full name of the debtor"
+          },
+          "totalUnpaidDebt": {
+            "type": "number",
+            "format": "float",
+            "description": "Total amount of unpaid debt"
+          },
+          "delinquencyDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when the debt became delinquent"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Contact phone number of the debtor"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address of the debtor"
+          },
+          "productOrService": {
+            "type": "string",
+            "description": "Name of the product or service delivered to the debtor"
+          },
+          "creditorName": {
+            "type": "string",
+            "description": "Name of the creditor"
           }
+        },
+        "required": [
+          "debtorId",
+          "debtorName",
+          "totalUnpaidDebt",
+          "delinquencyDate",
+          "creditorName"
         ]
       },
       "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
         "type": "object",
+        "required": ["code", "message"],
         "properties": {
-          "error": {
+          "code": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "description": "Error code"
           },
           "message": {
-            "type": "string"
+            "type": "string",
+            "description": "Error message"
+          }
+        },
+        "example": {
+          "code": 404,
+          "message": "Debtor not found"
+        }
+      },
+      "NewDebtor": {
+        "type": "object",
+        "required": [
+          "debtorName",
+          "totalUnpaidDebt",
+          "delinquencyDate",
+          "phoneNumber",
+          "email",
+          "productOrService",
+          "creditorName"
+        ],
+        "properties": {
+          "debtorName": {
+            "type": "string",
+            "description": "Full name of the debtor"
+          },
+          "totalUnpaidDebt": {
+            "type": "number",
+            "format": "float",
+            "description": "Total amount of unpaid debt"
+          },
+          "delinquencyDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when the debt became delinquent"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Contact phone number of the debtor"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address of the debtor"
+          },
+          "productOrService": {
+            "type": "string",
+            "description": "Name of the product or service delivered to the debtor"
+          },
+          "creditorName": {
+            "type": "string",
+            "description": "Name of the creditor"
           }
         }
       }
     },
     "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "COLLECTWISE-KEY"
       }
     }
   }

@@ -2,8 +2,8 @@
   "$schema": "https://mintlify.com/schema.json",
   "name": "Starter Kit",
   "logo": {
-    "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg"
+    "dark": "/logo/logo.png",
+    "light": "/logo/logo.png"
   },
   "favicon": "/favicon.svg",
   "colors": {
@@ -26,60 +26,45 @@
     "url": "https://dashboard.mintlify.com"
   },
   "tabs": [
-    {
-      "name": "API Reference",
-      "url": "api-reference"
-    }
   ],
   "anchors": [
-    {
-      "name": "Documentation",
-      "icon": "book-open-cover",
-      "url": "https://mintlify.com/docs"
-    },
-    {
-      "name": "Community",
-      "icon": "slack",
-      "url": "https://mintlify.com/community"
-    },
-    {
-      "name": "Blog",
-      "icon": "newspaper",
-      "url": "https://mintlify.com/blog"
-    }
+
   ],
   "navigation": [
     {
       "group": "Get Started",
       "pages": [
         "introduction",
-        "quickstart",
-        "development"
+        "authorization"        
+      ]
+    },
+
+    {
+      "group": "Debtors",
+      "pages": [
+        "api-reference/Debtor-Object",
+        "api-reference/endpoint/Create-Debtor",
+        "api-reference/endpoint/Bulk-Create-Debtors",
+        "api-reference/endpoint/Update-Debtor",
+        "api-reference/endpoint/Get-Debtor",
+        "api-reference/endpoint/Delete-Debtor"
       ]
     },
     {
-      "group": "Essentials",
+      "group": "Debtor Status",
       "pages": [
-        "essentials/markdown",
-        "essentials/code",
-        "essentials/images",
-        "essentials/settings",
-        "essentials/navigation",
-        "essentials/reusable-snippets"
+        "api-reference/Debtor-Statuses",
+        "api-reference/endpoint/Get-Debtor-Status",
+        "api-reference/endpoint/Get-Multiple-Debtor-Statuses",
+        "api-reference/endpoint/Update-Debtor-Status"
       ]
     },
     {
-      "group": "API Documentation",
+      "group": "Webhooks",
       "pages": [
-        "api-reference/introduction"
-      ]
-    },
-    {
-      "group": "Endpoint Examples",
-      "pages": [
-        "api-reference/endpoint/get",
-        "api-reference/endpoint/create",
-        "api-reference/endpoint/delete"
+        "api-reference/Webhooks-Overview",
+        "api-reference/Payment-Received",
+        "api-reference/Communications-Webhook"
       ]
     }
   ],
