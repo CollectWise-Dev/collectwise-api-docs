@@ -303,6 +303,140 @@
           }
         }
       }
+    },
+    "/debtorStatus/{debtorId}": {
+      "get": {
+        "summary": "Get debtor status",
+        "description": "Retrieve the current status of a specific debtor",
+        "parameters": [
+          {
+            "name": "debtorId",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier of the debtor",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Debtor status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtorStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Debtor not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/debtorStatuses": {
+      "get": {
+        "summary": "Get all debtor statuses",
+        "description": "Retrieve the current status of all debtors",
+        "responses": {
+          "200": {
+            "description": "Debtor statuses retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "debtorStatuses": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DebtorStatus"
+                      }
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Total number of debtor statuses retrieved"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/debtorStatus/paidCreditor/{debtorId}": {
+      "patch": {
+        "summary": "Update debtor status to Paid Creditor Directly",
+        "description": "Update the status of a specific debtor to 'Paid Creditor Directly'",
+        "parameters": [
+          {
+            "name": "debtorId",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier of the debtor",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Debtor status updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Debtor status updated to 'Paid Creditor Directly' successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Debtor not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -603,7 +737,30 @@
           "lastUpdated"
         ]
       },
-
+      "DebtorStatus": {
+        "type": "object",
+        "properties": {
+          "debtorId": {
+            "type": "string",
+            "description": "Unique identifier of the debtor"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the debtor",
+            "enum": [
+              "Potential",
+              "Subscription",
+              "Partial",
+              "Paid",
+              "Deleted",
+              "Paid Creditor Directly",
+              "Deceased",
+              "Filed Bankruptcy"
+            ]
+          }         
+        },
+        "required": ["debtorId", "status"]
+      },
       "Error": {
         "type": "object",
         "required": ["code", "message"],
