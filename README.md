@@ -1,32 +1,34 @@
-# Mintlify Starter Kit
+# CollectWise API Docs
 
-Click on `Use this template` to copy the Mintlify starter kit. The starter kit contains examples including
+Welcome to the CollectWise API documentation! This guide provides the resources you need to integrate with our platform, manage debtor information, and automate debt collection processes effectively.
 
-- Guide pages
-- Navigation
-- Customizations
-- API Reference pages
-- Use of popular components
+## Key Features
+- **Guide Pages**: Step-by-step instructions for setup and integration.
+- **Debtor Management**: Detailed API references for creating, updating, and deleting debtor records.
+- **Statuses**: Explanation of debtor statuses for tracking account conditions.
+- **Webhooks**: Configure real-time updates for debtor interactions.
 
-### Development
+## Development
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mintlify) to preview the documentation changes locally. To install, use the following command
+Install the [Mintlify CLI](https://www.npmjs.com/package/mintlify) to preview documentation changes:
 
-```
+```bash
 npm i -g mintlify
 ```
 
-Run the following command at the root of your documentation (where mint.json is)
+Then run 
 
-```
+```bash
 mintlify dev
 ```
 
-### Publishing Changes
+## Publishing Changes
 
-Install our Github App to auto propagate changes from your repo to your deployment. Changes will be deployed to production automatically after pushing to the default branch. Find the link to install on your dashboard. 
+Set up the Mintlify GitHub App for automatic deployment to production.
 
-#### Troubleshooting
+## Troubleshooting
 
-- Mintlify dev isn't running - Run `mintlify install` it'll re-install dependencies.
-- Page loads as a 404 - Make sure you are running in a folder with `mint.json`
+- **Mintlify dev isn’t running**: Run `mintlify install` to reinstall dependencies.
+- **404 Error**: Ensure you’re in the correct folder with `mint.json`.
+
+Explore each section for further guidance!
