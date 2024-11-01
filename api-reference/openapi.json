@@ -20,46 +20,8 @@
   ],
   "paths": {
     "/debtor": {
-      "get": {
-        "description": "Returns all debtors from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Debtor response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DebtorResponse"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
+        "summary": "Create a new debtor",
         "description": "Creates a new debtor record",
         "requestBody": {
           "description": "Debtor information to add",
@@ -74,7 +36,7 @@
         },
         "responses": {
           "200": {
-            "description": "Debtor response",
+            "description": "Debtor created successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -84,7 +46,47 @@
             }
           },
           "400": {
-            "description": "Unexpected error",
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List debtors",
+        "description": "Returns all debtors from the system that the user has access to",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The maximum number of results to return",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of debtors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DebtorResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -98,8 +100,8 @@
     },
     "/debtor/{debtorId}": {
       "get": {
-        "summary": "Get a debtor by ID",
-        "description": "Retrieve the details of a specific debtor using their unique identifier",
+        "summary": "Get a debtor",
+        "description": "Retrieve a specific debtor's information",
         "parameters": [
           {
             "name": "debtorId",
@@ -113,7 +115,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Debtor details retrieved successfully",
+            "description": "Debtor found",
             "content": {
               "application/json": {
                 "schema": {
@@ -161,7 +163,7 @@
         },
         "responses": {
           "200": {
-            "description": "Debtor successfully updated",
+            "description": "Debtor updated successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -171,7 +173,7 @@
             }
           },
           "400": {
-            "description": "Bad request - Invalid input",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -208,7 +210,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Debtor successfully deleted",
+            "description": "Debtor deleted successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -290,7 +292,7 @@
             }
           },
           "400": {
-            "description": "Bad request - Invalid input",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -305,6 +307,105 @@
   },
   "components": {
     "schemas": {
+      "NewDebtor": {
+        "type": "object",
+        "required": [
+          "debtorName",
+          "totalUnpaidDebt",
+          "delinquencyDate",
+          "phoneNumber",
+          "email",
+          "productOrService",
+          "creditorName"
+        ],
+        "properties": {
+          "debtorName": {
+            "type": "string",
+            "description": "Full name of the debtor"
+          },
+          "totalUnpaidDebt": {
+            "type": "number",
+            "format": "float",
+            "description": "Total amount of unpaid debt"
+          },
+          "delinquencyDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when the debt became delinquent"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Contact phone number of the debtor"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address of the debtor"
+          },
+          "productOrService": {
+            "type": "string",
+            "description": "Name of the product or service delivered to the debtor"
+          },
+          "creditorName": {
+            "type": "string",
+            "description": "Name of the creditor"
+          },
+          "accountNumber": {
+            "type": "string",
+            "description": "Account number associated with the debt"
+          },
+          "address": {
+            "type": "string",
+            "description": "Street address of the debtor"
+          },
+          "city": {
+            "type": "string",
+            "description": "City of the debtor"
+          },
+          "state": {
+            "type": "string",
+            "description": "State of the debtor"
+          },
+          "zipCode": {
+            "type": "string",
+            "description": "ZIP code of the debtor"
+          },
+          "ssn": {
+            "type": "string",
+            "description": "Social Security Number of the debtor"
+          },
+          "lastPayDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of the last payment made by the debtor"
+          },
+          "chargeOffDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when the debt was charged off, if applicable"
+          },
+          "interestDue": {
+            "type": "number",
+            "format": "float",
+            "description": "Amount of interest due on the debt"
+          },
+          "principalDue": {
+            "type": "number",
+            "format": "float",
+            "description": "Amount of principal due on the debt"
+          },
+          "otherFees": {
+            "type": "number",
+            "format": "float",
+            "description": "Other fees associated with the debt"
+          },
+          "amountPaid": {
+            "type": "number",
+            "format": "float",
+            "description": "Total amount paid by the debtor so far"
+          }
+        }
+      },
       "DebtorUpdate": {
         "type": "object",
         "properties": {
@@ -432,6 +533,65 @@
           "creditorName": {
             "type": "string",
             "description": "Name of the creditor"
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the last update to this record"
+          },
+          "accountNumber": {
+            "type": "string",
+            "description": "Account number associated with the debt"
+          },
+          "address": {
+            "type": "string",
+            "description": "Street address of the debtor"
+          },
+          "city": {
+            "type": "string",
+            "description": "City of the debtor"
+          },
+          "state": {
+            "type": "string",
+            "description": "State of the debtor"
+          },
+          "zipCode": {
+            "type": "string",
+            "description": "ZIP code of the debtor"
+          },
+          "ssn": {
+            "type": "string",
+            "description": "Social Security Number of the debtor"
+          },
+          "lastPayDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of the last payment made by the debtor"
+          },
+          "chargeOffDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when the debt was charged off, if applicable"
+          },
+          "interestDue": {
+            "type": "number",
+            "format": "float",
+            "description": "Amount of interest due on the debt"
+          },
+          "principalDue": {
+            "type": "number",
+            "format": "float",
+            "description": "Amount of principal due on the debt"
+          },
+          "otherFees": {
+            "type": "number",
+            "format": "float",
+            "description": "Other fees associated with the debt"
+          },
+          "amountPaid": {
+            "type": "number",
+            "format": "float",
+            "description": "Total amount paid by the debtor so far"
           }
         },
         "required": [
@@ -439,9 +599,11 @@
           "debtorName",
           "totalUnpaidDebt",
           "delinquencyDate",
-          "creditorName"
+          "creditorName",
+          "lastUpdated"
         ]
       },
+
       "Error": {
         "type": "object",
         "required": ["code", "message"],
@@ -457,53 +619,8 @@
           }
         },
         "example": {
-          "code": 404,
-          "message": "Debtor not found"
-        }
-      },
-      "NewDebtor": {
-        "type": "object",
-        "required": [
-          "debtorName",
-          "totalUnpaidDebt",
-          "delinquencyDate",
-          "phoneNumber",
-          "email",
-          "productOrService",
-          "creditorName"
-        ],
-        "properties": {
-          "debtorName": {
-            "type": "string",
-            "description": "Full name of the debtor"
-          },
-          "totalUnpaidDebt": {
-            "type": "number",
-            "format": "float",
-            "description": "Total amount of unpaid debt"
-          },
-          "delinquencyDate": {
-            "type": "string",
-            "format": "date",
-            "description": "Date when the debt became delinquent"
-          },
-          "phoneNumber": {
-            "type": "string",
-            "description": "Contact phone number of the debtor"
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "description": "Email address of the debtor"
-          },
-          "productOrService": {
-            "type": "string",
-            "description": "Name of the product or service delivered to the debtor"
-          },
-          "creditorName": {
-            "type": "string",
-            "description": "Name of the creditor"
-          }
+          "code": 400,
+          "message": "Invalid input: debtorName is required"
         }
       }
     },
