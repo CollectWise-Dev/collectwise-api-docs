@@ -10,7 +10,7 @@
   },
   "servers": [
     {
-      "url": "https://api.collectwise.com"
+      "url": "https://collectwiseapi.com"
     }
   ],
   "security": [
