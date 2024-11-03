@@ -785,7 +785,7 @@
       "apiKey": {
         "type": "apiKey",
         "in": "header",
-        "name": "COLLECTWISE-KEY"
+        "name": "COLLECTWISE_KEY"
       }
     }
   }
