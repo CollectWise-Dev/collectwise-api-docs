@@ -730,6 +730,10 @@
             "type": "number",
             "format": "float",
             "description": "Total amount paid by the debtor so far"
+          },
+          "customWorkflowID": {
+            "type": "string",
+            "description": "Custom workflow identifier for the debtor"
           }
         },
         "required": [
