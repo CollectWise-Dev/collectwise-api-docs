@@ -538,7 +538,7 @@
             "format": "float",
             "description": "Total amount paid by the debtor so far"
           },
-          "customWorkflowId": {
+          "customWorkflowID": {
             "type": "string",
             "description": "Custom workflow identifier for the debtor"
           }
@@ -731,7 +731,7 @@
             "format": "float",
             "description": "Total amount paid by the debtor so far"
           },
-          "customWorkflowId": {
+          "customWorkflowID": {
             "type": "string",
             "description": "Custom workflow identifier for the debtor"
           }
