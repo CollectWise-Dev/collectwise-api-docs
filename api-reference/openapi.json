@@ -541,6 +541,10 @@
           "customWorkflowID": {
             "type": "string",
             "description": "Custom workflow identifier for the debtor"
+          },
+          "customization": {
+            "type": "string",
+            "description": "Custom instructions for AI collection workflow (e.g., tone, channel preferences, frequency). If not provided, the system will generate an optimal collection flow."
           }
         }
       },
@@ -631,6 +635,10 @@
             "type": "number",
             "format": "float",
             "description": "Updated total amount paid by the debtor so far"
+          },
+          "customization": {
+            "type": "string",
+            "description": "Custom instructions for AI collection workflow (e.g., tone, channel preferences, frequency). If not provided, the system will generate an optimal collection flow."
           }
         }
       },
@@ -734,6 +742,10 @@
           "customWorkflowID": {
             "type": "string",
             "description": "Custom workflow identifier for the debtor"
+          },
+          "customization": {
+            "type": "string",
+            "description": "Custom instructions for AI collection workflow (e.g., tone, channel preferences, frequency). If not provided, the system will generate an optimal collection flow."
           }
         },
         "required": [
