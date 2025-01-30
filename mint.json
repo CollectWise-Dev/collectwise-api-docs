@@ -70,7 +70,8 @@
     {
       "group": "Communications",
       "pages": [
-        "api-reference/endpoint/Drop-Voicemail"
+        "api-reference/endpoint/Drop-Voicemail",
+        "api-reference/endpoint/RPC-Call"
       ]
     }
   ],

@@ -508,6 +508,97 @@
           }
         }
       }
+    },
+    "/rpcCall": {
+      "post": {
+        "summary": "Make an RPC Call",
+        "description": "Initiates an RPC (Right Party Contact) call to verify debtor identity",
+        "requestBody": {
+          "description": "RPC call details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["toNumber", "creditorName", "debtorName", "dob", "voicemailMessage"],
+                "properties": {
+                  "toNumber": {
+                    "type": "string",
+                    "description": "Phone number to call in E.164 format (e.g., +18768828822)",
+                    "pattern": "^\\+[1-9]\\d{10,14}$"
+                  },
+                  "creditorName": {
+                    "type": "string",
+                    "description": "Name of the creditor"
+                  },
+                  "debtorName": {
+                    "type": "string",
+                    "description": "Name of the debtor"
+                  },
+                  "dob": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Debtor's date of birth (YYYY-MM-DD)"
+                  },
+                  "voicemailMessage": {
+                    "type": "string",
+                    "description": "Message to leave if the call goes to voicemail"
+                  }
+                }
+              },
+              "example": {
+                "toNumber": "+18768828822",
+                "creditorName": "ABC Bank",
+                "debtorName": "John Doe",
+                "dob": "1980-01-01",
+                "voicemailMessage": "Hello, this is an important message regarding your account..."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RPC call initiated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "RPC call initiated successfully"
+                    },
+                    "callId": {
+                      "type": "string",
+                      "description": "Unique identifier for the call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid phone number format or missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to initiate call",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
