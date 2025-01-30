@@ -437,6 +437,77 @@
           }
         }
       }
+    },
+    "/dropVoicemail": {
+      "post": {
+        "summary": "Drop a voicemail",
+        "description": "Sends an automated voicemail to the specified phone number",
+        "requestBody": {
+          "description": "Voicemail details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phoneNumber", "message"],
+                "properties": {
+                  "phoneNumber": {
+                    "type": "string",
+                    "description": "Phone number in E.164 format (e.g., +18768828822)",
+                    "pattern": "^\\+[1-9]\\d{10,14}$"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "The voicemail message to be delivered"
+                  }
+                }
+              },
+              "example": {
+                "phoneNumber": "+18768828822",
+                "message": "Hello, this is an important message regarding your account..."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Voicemail sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Voicemail delivered successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid phone number format or missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to deliver voicemail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

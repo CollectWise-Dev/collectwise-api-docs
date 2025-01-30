@@ -66,6 +66,12 @@
         "api-reference/Payment-Received",
         "api-reference/Communications-Webhook"
       ]
+    },
+    {
+      "group": "Communications",
+      "pages": [
+        "api-reference/endpoint/Drop-Voicemail"
+      ]
     }
   ],
   "footerSocials": {    
