@@ -464,13 +464,19 @@
                     "type": "string",
                     "description": "Callback phone number in E.164 format",
                     "pattern": "^\\+[1-9]\\d{10,14}$"
+                  },
+                  "voiceGender": {
+                    "type": "string",
+                    "description": "Gender of the voice to use for the voicemail",
+                    "enum": ["male", "female"]
                   }
                 }
               },
               "example": {
                 "phoneNumber": "+18768828822",
                 "message": "Hello, this is an important message regarding your account...",
-                "callbackNumber": "+18768828823"
+                "callbackNumber": "+18768828823",
+                "voiceGender": "female"
               }
             }
           }
