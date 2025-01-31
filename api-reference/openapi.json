@@ -543,6 +543,10 @@
                   "voicemailMessage": {
                     "type": "string",
                     "description": "Message to leave if the call goes to voicemail"
+                  },
+                  "agencyName": {
+                    "type": "string",
+                    "description": "Optional name of the collection agency"
                   }
                 }
               },
@@ -551,7 +555,8 @@
                 "creditorName": "ABC Bank",
                 "debtorName": "John Doe",
                 "dob": "1980-01-01",
-                "voicemailMessage": "Hello, this is an important message regarding your account..."
+                "voicemailMessage": "Hello, this is an important message regarding your account...",
+                "agencyName": "Midwest Collections"
               }
             }
           }
