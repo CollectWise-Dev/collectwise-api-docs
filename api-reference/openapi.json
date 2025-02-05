@@ -559,6 +559,10 @@
                   "agencyName": {
                     "type": "string",
                     "description": "Optional name of the collection agency"
+                  },
+                  "agentName": {
+                    "type": "string",
+                    "description": "Optional name of the agent making the call, defaults to Nancy"
                   }
                 }
               },
@@ -568,7 +572,8 @@
                 "debtorName": "John Doe",
                 "dob": "1980-01-01",
                 "voicemailMessage": "Hello, this is an important message regarding your account...",
-                "agencyName": "Midwest Collections"
+                "agencyName": "Midwest Collections",
+                "agentName": "Nancy"
               }
             }
           }
