@@ -563,6 +563,15 @@
                   "agentName": {
                     "type": "string",
                     "description": "Optional name of the agent making the call, defaults to Nancy"
+                  },
+                  "successNumber": {
+                    "type": "string",
+                    "description": "Optional phone number in E.164 format to route the call to upon successful RPC",
+                    "pattern": "^\\+[1-9]\\d{10,14}$"
+                  },
+                  "customMessage": {
+                    "type": "string",
+                    "description": "Optional message to be played after introduction but before RPC verification"
                   }
                 }
               },
@@ -573,7 +582,9 @@
                 "dob": "1980-01-01",
                 "voicemailMessage": "Hello, this is an important message regarding your account...",
                 "agencyName": "Midwest Collections",
-                "agentName": "Nancy"
+                "agentName": "Nancy",
+                "successNumber": "+18768828824",
+                "customMessage": "This call is regarding an important financial matter that requires your immediate attention."
               }
             }
           }
