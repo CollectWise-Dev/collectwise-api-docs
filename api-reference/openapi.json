@@ -532,7 +532,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["toNumber", "creditorName", "debtorName", "dob", "voicemailMessage"],
+                "required": ["toNumber", "creditorName", "debtorName", "voicemailMessage"],
                 "properties": {
                   "toNumber": {
                     "type": "string",
@@ -550,7 +550,12 @@
                   "dob": {
                     "type": "string",
                     "format": "date",
-                    "description": "Debtor's date of birth (YYYY-MM-DD)"
+                    "description": "Debtor's date of birth (YYYY-MM-DD). Either dob or last4SSN must be provided"
+                  },
+                  "last4SSN": {
+                    "type": "string",
+                    "description": "Last 4 digits of debtor's SSN. Either dob or last4SSN must be provided",
+                    "pattern": "^\\d{4}$"
                   },
                   "voicemailMessage": {
                     "type": "string",
@@ -573,7 +578,15 @@
                     "type": "string",
                     "description": "Optional message to be played after introduction but before RPC verification"
                   }
-                }
+                },
+                "oneOf": [
+                  {
+                    "required": ["dob"]
+                  },
+                  {
+                    "required": ["last4SSN"]
+                  }
+                ]
               },
               "example": {
                 "toNumber": "+18768828822",
