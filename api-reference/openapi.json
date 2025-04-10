@@ -532,7 +532,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["toNumber", "creditorName", "debtorName", "voicemailMessage"],
+                "required": ["toNumber", "creditorName", "debtorName", "voicemailMessage", "callbackNumber"],
                 "properties": {
                   "toNumber": {
                     "type": "string",
@@ -561,6 +561,11 @@
                     "type": "string",
                     "description": "Message to leave if the call goes to voicemail"
                   },
+                  "callbackNumber": {
+                    "type": "string",
+                    "description": "Phone number in E.164 format that missed calls will be routed to upon callbacks",
+                    "pattern": "^\\+[1-9]\\d{10,14}$"
+                  },
                   "agencyName": {
                     "type": "string",
                     "description": "Optional name of the collection agency"
@@ -577,6 +582,11 @@
                   "customMessage": {
                     "type": "string",
                     "description": "Optional message to be played after introduction but before RPC verification"
+                  },
+                  "instantTransferToggle": {
+                    "type": "boolean",
+                    "description": "When true, transfers the call to successNumber immediately after name verification, bypassing DOB/SSN verification",
+                    "default": false
                   }
                 },
                 "oneOf": [
@@ -597,7 +607,9 @@
                 "agencyName": "Midwest Collections",
                 "agentName": "Nancy",
                 "successNumber": "+18768828824",
-                "customMessage": "This call is regarding an important financial matter that requires your immediate attention."
+                "callbackNumber": "+18768828825",
+                "customMessage": "This call is regarding an important financial matter that requires your immediate attention.",
+                "instantTransferToggle": false
               }
             }
           }
