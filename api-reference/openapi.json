@@ -532,7 +532,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["toNumber", "creditorName", "debtorName", "voicemailMessage", "callbackNumber"],
+                "required": ["toNumber", "creditorName", "debtorName", "callbackNumber"],
                 "properties": {
                   "toNumber": {
                     "type": "string",
