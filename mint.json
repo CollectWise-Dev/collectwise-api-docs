@@ -18,7 +18,7 @@
   "topbarLinks": [
     {
       "name": "Support",
-      "url": "mailto:vivek@collectwise.co"
+      "url": "mailto:mohammed@collectwise.com"
     }
   ],
   "topbarCtaButton": {
@@ -76,7 +76,7 @@
     }
   ],
   "footerSocials": {    
-    "github": "https://github.com/vivek-i/collectwise-api-docs",
+    "github": "https://github.com/CollectWise-Dev/collectwise-api-docs",
     "linkedin": "https://www.linkedin.com/company/trycollectwise/"
   }
 }
