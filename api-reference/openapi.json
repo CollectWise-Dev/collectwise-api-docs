@@ -765,7 +765,7 @@
           "agentName": {
             "type": "string",
             "description": "Name of the agent to attribute workflow enrollment to"
-          }
+          },
           "customization": {
             "type": "string",
             "description": "Custom instructions for AI collection workflow (e.g., tone, channel preferences, frequency). If not provided, the system will generate an optimal collection flow."
@@ -980,7 +980,7 @@
               "description": "Agent name passed in the request. This is echoed back; if not provided, the service falls back internally to merchantName/email, but only the raw agentName is returned here."
             }
           }
-        }
+        },
           "customization": {
             "type": "string",
             "description": "Custom instructions for AI collection workflow (e.g., tone, channel preferences, frequency). If not provided, the system will generate an optimal collection flow."
