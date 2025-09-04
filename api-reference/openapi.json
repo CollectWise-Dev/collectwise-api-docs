@@ -658,6 +658,137 @@
         }
       }
     }
+    ,
+    "/workflow/{debtorId}/pause": {
+      "patch": {
+        "summary": "Pause a debtor's workflow",
+        "description": "Pauses the active workflow for the specified debtor, suppressing outbound communications.",
+        "parameters": [
+          {
+            "name": "debtorId",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier of the debtor",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow paused successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Debtor's workflow paused" },
+                    "paused": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Debtor ID is required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Debtor not found or not enrolled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to pause workflow",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflow/{debtorId}/resume": {
+      "patch": {
+        "summary": "Resume a debtor's workflow",
+        "description": "Resumes the active workflow for the specified debtor, re-enabling outbound steps.",
+        "parameters": [
+          {
+            "name": "debtorId",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier of the debtor",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow resumed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Debtor's workflow resumed" },
+                    "paused": { "type": "boolean", "example": false }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Debtor ID is required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Debtor not found or not enrolled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to resume workflow",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "components": {
     "schemas": {
