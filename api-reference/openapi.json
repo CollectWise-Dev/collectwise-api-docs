@@ -827,6 +827,10 @@
             "format": "email",
             "description": "Email address of the debtor"
           },
+          "callbackNumber": {
+            "type": "string",
+            "description": "Callback phone number"
+          },
           "productOrService": {
             "type": "string",
             "description": "Name of the product or service delivered to the debtor"
@@ -929,6 +933,10 @@
             "format": "email",
             "description": "Updated email address of the debtor"
           },
+          "callbackNumber": {
+            "type": "string",
+            "description": "Updated callback phone number"
+          },
           "productOrService": {
             "type": "string",
             "description": "Updated name of the product or service delivered to the debtor"
@@ -1026,6 +1034,10 @@
             "type": "string",
             "format": "email",
             "description": "Email address of the debtor"
+          },
+          "callbackNumber": {
+            "type": "string",
+            "description": "Callback phone number"
           },
           "productOrService": {
             "type": "string",
