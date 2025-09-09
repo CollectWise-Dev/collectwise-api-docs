@@ -1,0 +1,36 @@
+---
+title: 'Debtors Status in Workflow'
+openapi: 'POST /status/debtors'
+---
+
+### Example Response
+
+```json
+{
+  "windowHours": 24,
+  "limit": 20,
+  "debtors": [
+    {
+      "debtorId": "24555f289-899c-4b3b-ba4a-b71a3664c671",
+      "workflowId": "111c3300-bcd5-4c0b-a8ad-535b3abbdeb0",
+      "paused": false,
+      "nextExecutionDate": "2025-09-09T15:17:00.000Z",
+      "nextStageId": "5eec7688-6721-4c52-8f8d-4d301d796b3b",
+      "nextStageName": "SMS 2",
+      "smsCounts": { "Delivered": 1 },
+      "recentSms": [
+        {
+          "id": "msg_...",
+          "phone_number": "+15552150663",
+          "debtor_id": "24555f289-899c-4b3b-ba4a-b71a3664c671",
+          "content": "templateId:48 message:Hello {debtorName}...",
+          "created_at": "2025-09-08T20:11:03.676Z",
+          "status": "Delivered"
+        }
+      ]
+    }
+  ]
+}
+```
+
+

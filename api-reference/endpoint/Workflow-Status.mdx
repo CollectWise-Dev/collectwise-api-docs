@@ -1,0 +1,28 @@
+---
+title: 'Workflow Status Overview'
+openapi: 'GET /status/workflow/{workflowId}'
+---
+
+### Example Response
+
+```json
+{
+  "workflow": { "id": "197c3300-bcd5-4c0b-a8ad-535b3abbdeb0", "name": "3-day SMS Workflow" },
+  "totals": { "enrolled": 205, "paused": 5, "eligibleNow": 0, "queued": 200, "noNextStage": 5 },
+  "stages": [ { "stageName": "SMS 2", "count": 200 } ],
+  "windowHours": 24,
+  "smsSummary": { "Delivered": 200 },
+  "recentSms": [
+    {
+      "id": "msg_...",
+      "phone_number": "+15555998608",
+      "debtor_id": "9115e0de-01e2-416a-8b0c-4d46d9b6c032",
+      "content": "templateId:48 message:Hello {debtorName}...",
+      "created_at": "2025-09-08T20:16:01.608Z",
+      "status": "Delivered"
+    }
+  ]
+}
+```
+
+

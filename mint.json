@@ -78,7 +78,9 @@
       "group": "Workflow",
       "pages": [
         "api-reference/endpoint/Pause-Workflow",
-        "api-reference/endpoint/Resume-Workflow"
+        "api-reference/endpoint/Resume-Workflow",
+        "api-reference/endpoint/Workflow-Status",
+        "api-reference/endpoint/Debtors-Status"
       ]
     }
   ],

@@ -789,6 +789,72 @@
         }
       }
     }
+    ,
+    "/status/workflow/{workflowId}": {
+      "get": {
+        "summary": "Workflow status overview",
+        "description": "Provides workflow meta, totals, stage breakdown, window hours, SMS summary, and recent SMS for a workflow.",
+        "parameters": [
+          {
+            "name": "workflowId",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier of the workflow",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "description": "Lookback window in hours. Defaults to 24; clamped to [1, 168].",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 168, "default": 24 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow status overview returned",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Upstream/internal error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/status/debtors": {
+      "post": {
+        "summary": "Per-debtor workflow status and recent SMS",
+        "description": "Returns per-debtor status (paused, next stage/time), SMS counts, and recent SMS for provided debtorIds within a workflow.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["workflowId", "debtorIds"],
+                "properties": {
+                  "workflowId": { "type": "string", "description": "Workflow identifier" },
+                  "debtorIds": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+                  "hours": { "type": "integer", "minimum": 1, "maximum": 168, "default": 24 },
+                  "limit": { "type": "integer", "minimum": 1, "maximum": 200, "default": 20 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Per-debtor statuses returned",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Upstream/internal error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    }
   },
   "components": {
     "schemas": {
@@ -1186,7 +1252,7 @@
       "apiKey": {
         "type": "apiKey",
         "in": "header",
-        "name": "COLLECTWISE_KEY"
+        "name": "collectwise_key"
       }
     }
   }
