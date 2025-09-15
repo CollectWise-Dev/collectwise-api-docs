@@ -914,6 +914,11 @@
             "type": "string",
             "description": "Name of the creditor"
           },
+          "creditorEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address of the creditor (optional)"
+          },
           "accountNumber": {
             "type": "string",
             "description": "Account number associated with the debt"
@@ -1121,6 +1126,11 @@
           "creditorName": {
             "type": "string",
             "description": "Name of the creditor"
+          },
+          "creditorEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "Creditor email if provided"
           },
           "lastUpdated": {
             "type": "string",
