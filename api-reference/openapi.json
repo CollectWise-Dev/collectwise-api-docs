@@ -657,6 +657,106 @@
           }
         }
       }
+    },
+    "/call/{callId}/recording": {
+      "get": {
+        "summary": "Get Call Recording",
+        "description": "Retrieve call recording with optional transcript and analysis data",
+        "parameters": [
+          {
+            "name": "callId",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier for the call",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "description": "Recording format",
+            "schema": {
+              "type": "string",
+              "enum": ["standard", "multichannel", "scrubbed", "scrubbed_multichannel"],
+              "default": "standard"
+            }
+          },
+          {
+            "name": "include_transcript",
+            "in": "query",
+            "required": false,
+            "description": "Include call transcript",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "include_analysis",
+            "in": "query",
+            "required": false,
+            "description": "Include call analysis",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Call recording retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallRecording"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Call ID not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
     ,
     "/workflow/{debtorId}/pause": {
@@ -1246,6 +1346,46 @@
           }         
         },
         "required": ["debtorId", "status"]
+      },
+      "CallRecording": {
+        "type": "object",
+        "properties": {
+          "recording_url": {
+            "type": "string",
+            "description": "URL to the audio recording file"
+          },
+          "transcript": {
+            "type": "string",
+            "description": "Full conversation transcript (if requested)"
+          },
+          "analysis": {
+            "type": "object",
+            "description": "Call analysis data (if requested)",
+            "properties": {
+              "in_voicemail": {
+                "type": "boolean",
+                "description": "Whether the call went to voicemail"
+              },
+              "call_summary": {
+                "type": "string",
+                "description": "AI-generated summary of the call"
+              },
+              "user_sentiment": {
+                "type": "string",
+                "description": "Detected user sentiment (Positive/Negative/Neutral)"
+              },
+              "custom_analysis_data": {
+                "type": "object",
+                "description": "Additional analysis data"
+              },
+              "call_successful": {
+                "type": "boolean",
+                "description": "Whether the call was successful"
+              }
+            }
+          }
+        },
+        "required": ["recording_url"]
       },
       "Error": {
         "type": "object",
