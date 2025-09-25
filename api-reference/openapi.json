@@ -963,6 +963,75 @@
           "500": { "description": "Upstream/internal error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
+    },
+    "/tcn/call-outcome/{tcn-cid}": {
+      "get": {
+        "summary": "Get TCN Call Outcome",
+        "description": "Retrieves the call outcome for a specific TCN call ID. This endpoint is designed to support TCN's SIP integration where calls are routed to CollectWise AI agents.",
+        "parameters": [
+          {
+            "name": "tcn-cid",
+            "in": "path",
+            "required": true,
+            "description": "The TCN call identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Call outcome found and returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TCNCallOutcome"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing TCN CID parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Call outcome not found (call in progress or not available)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TCNCallOutcomeNotFound"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1404,6 +1473,47 @@
         "example": {
           "code": 400,
           "message": "Invalid input: debtorName is required"
+        }
+      },
+      "TCNCallOutcome": {
+        "type": "object",
+        "required": ["action", "tcn_cid", "timestamp"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "The action to be taken based on the call outcome",
+            "enum": ["end", "judge_transfer", "garnishment_transfer", "general_transfer"]
+          },
+          "tcn_cid": {
+            "type": "string",
+            "description": "The TCN call identifier"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the call outcome was determined"
+          }
+        },
+        "example": {
+          "action": "general_transfer",
+          "tcn_cid": "12345",
+          "timestamp": "2024-01-15T10:30:00.000Z"
+        }
+      },
+      "TCNCallOutcomeNotFound": {
+        "type": "object",
+        "required": ["error", "message"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error type",
+            "example": "Call outcome not found"
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed error message",
+            "example": "Call may still be in progress or outcome not yet available"
+          }
         }
       }
     },

@@ -1,0 +1,36 @@
+---
+title: 'Get TCN Call Outcome'
+openapi: 'GET /tcn/call-outcome/{tcn-cid}'
+---
+
+## Overview
+
+The TCN Call Outcome API provides a simple endpoint for TCN (Third-Party Call Network) integration to retrieve call outcomes from CollectWise AI agents. This endpoint is designed to support TCN's SIP integration where calls are routed to our AI agents with `X-TCN-cid` headers.
+
+## Authentication
+
+This endpoint requires a valid `collectwise_key` header for API authentication, following the same pattern as other CollectWise API endpoints.
+
+## TCN Action Values
+
+The `action` field in the response can contain one of the following values:
+
+- `"end"` - Call completed normally, no transfer needed
+- `"judge_transfer"` - Transfer to judge/supervisor for legal matters
+- `"garnishment_transfer"` - Transfer to garnishment specialist
+- `"general_transfer"` - General transfer to human agent
+
+## Usage Pattern
+
+This endpoint should be pinged every 1-2 seconds after a call ends, with a timeout of 2-3 minutes. The endpoint will return:
+
+- **200**: Call outcome is available
+- **404**: Call is still in progress or outcome not yet available (continue polling)
+
+## Example Usage
+
+```bash
+curl -X GET \
+  "https://api.collectwiseapi.com/tcn/call-outcome/12345" \
+  -H "collectwise_key: your-api-key-here"
+```

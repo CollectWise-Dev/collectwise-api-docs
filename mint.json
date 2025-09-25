@@ -72,7 +72,8 @@
       "pages": [
         "api-reference/endpoint/Drop-Voicemail",
         "api-reference/endpoint/RPC-Call",
-        "api-reference/endpoint/Get-Call-Recordings"
+        "api-reference/endpoint/Get-Call-Recordings",
+        "api-reference/endpoint/Get-TCN-Call-Outcome"
       ]
     },
     {
