@@ -11,7 +11,9 @@ The TCN Call Outcome API provides a simple endpoint for TCN (Third-Party Call Ne
 
 This endpoint requires a valid `collectwise_key` header for API authentication, following the same pattern as other CollectWise API endpoints.
 
-## TCN Action Values
+## Response Fields
+
+### action
 
 The `action` field in the response can contain one of the following values:
 
@@ -19,6 +21,14 @@ The `action` field in the response can contain one of the following values:
 - `"judge_transfer"` - Transfer to judge/supervisor for legal matters
 - `"garnishment_transfer"` - Transfer to garnishment specialist
 - `"general_transfer"` - General transfer to human agent
+
+### language
+
+The `language` field indicates the language used during the call. This field may be `null` if not provided during call outcome creation.
+
+Example values include:
+- `"english"`
+- `"spanish"`
 
 ## Usage Pattern
 
