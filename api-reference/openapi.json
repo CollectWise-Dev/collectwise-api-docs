@@ -1500,12 +1500,18 @@
             "type": "string",
             "format": "date-time",
             "description": "Timestamp when the call outcome was determined"
+          },
+          "language": {
+            "type": "string",
+            "description": "The language used during the call (e.g., 'english', 'spanish'). May be null if not provided.",
+            "nullable": true
           }
         },
         "example": {
           "action": "general_transfer",
           "tcn_cid": "12345",
-          "timestamp": "2024-01-15T10:30:00.000Z"
+          "timestamp": "2024-01-15T10:30:00.000Z",
+          "language": "english"
         }
       },
       "TCNCallOutcomeNotFound": {
