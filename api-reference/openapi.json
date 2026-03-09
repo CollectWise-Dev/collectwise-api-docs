@@ -1036,7 +1036,7 @@
     "/billing/usage-summary": {
       "get": {
         "summary": "Get Billing Usage Summary",
-        "description": "Returns a complete billing breakdown with usage counts and costs across all channels for a given date range. Your API key identifies your organization automatically.",
+        "description": "Returns a complete billing breakdown with usage counts and costs across all channels for a given date range.",
         "parameters": [
           {
             "name": "start_date",
