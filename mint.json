@@ -77,6 +77,12 @@
       ]
     },
     {
+      "group": "Billing",
+      "pages": [
+        "api-reference/endpoint/Billing-Usage-Summary"
+      ]
+    },
+    {
       "group": "Workflow",
       "pages": [
         "api-reference/endpoint/Pause-Workflow",

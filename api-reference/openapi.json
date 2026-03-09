@@ -1032,6 +1032,74 @@
           }
         }
       }
+    },
+    "/billing/usage-summary": {
+      "get": {
+        "summary": "Get Billing Usage Summary",
+        "description": "Returns a complete billing breakdown with usage counts and costs across all channels for a given date range. Your API key identifies your organization automatically.",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "description": "Start of date range. Accepts YYYY-MM-DD (defaults to 00:00:00 UTC) or a full ISO 8601 UTC timestamp like 2025-02-01T05:00:00Z",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "description": "End of date range. Accepts YYYY-MM-DD (defaults to 23:59:59 UTC) or a full ISO 8601 UTC timestamp like 2025-02-28T04:59:59Z",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage summary retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingUsageSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request — missing or invalid date parameters, or billing not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Invalid API key or billing access not enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1527,6 +1595,143 @@
             "type": "string",
             "description": "Detailed error message",
             "example": "Call may still be in progress or outcome not yet available"
+          }
+        }
+      },
+      "BillingUsageSummary": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "Object type identifier",
+            "example": "billing.usage_summary"
+          },
+          "organization": {
+            "type": "string",
+            "description": "Your organization name"
+          },
+          "period": {
+            "type": "object",
+            "properties": {
+              "start_date": {
+                "type": "string",
+                "description": "Start of the queried date range"
+              },
+              "end_date": {
+                "type": "string",
+                "description": "End of the queried date range"
+              }
+            }
+          },
+          "sms": {
+            "type": "object",
+            "properties": {
+              "count": { "type": "number", "description": "Number of SMS segments sent" },
+              "cost": { "type": "number", "description": "Total SMS cost" },
+              "unit_cost": { "type": "number", "description": "Cost per segment" },
+              "unit": { "type": "string", "description": "Unit type", "example": "segments" }
+            }
+          },
+          "mms": {
+            "type": "object",
+            "properties": {
+              "count": { "type": "number", "description": "Number of MMS segments sent" },
+              "cost": { "type": "number", "description": "Total MMS cost" },
+              "unit_cost": { "type": "number", "description": "Cost per segment" },
+              "unit": { "type": "string", "description": "Unit type", "example": "segments" }
+            }
+          },
+          "email": {
+            "type": "object",
+            "properties": {
+              "count": { "type": "number", "description": "Number of emails sent" },
+              "cost": { "type": "number", "description": "Total email cost" },
+              "unit_cost": { "type": "number", "description": "Cost per message" },
+              "unit": { "type": "string", "description": "Unit type", "example": "messages" }
+            }
+          },
+          "rvm": {
+            "type": "object",
+            "description": "Ringless Voicemail — has two-part pricing (per-drop + per-hour duration)",
+            "properties": {
+              "drops": { "type": "number", "description": "Number of voicemail drops" },
+              "drop_cost": { "type": "number", "description": "Cost from drops (drops × drop rate)" },
+              "drop_unit_cost": { "type": "number", "description": "Cost per drop" },
+              "duration_seconds": { "type": "number", "description": "Total voicemail duration in seconds" },
+              "duration_hours": { "type": "number", "description": "Total voicemail duration in hours" },
+              "duration_cost": { "type": "number", "description": "Cost from duration (hours × hourly rate)" },
+              "duration_unit_cost_per_hour": { "type": "number", "description": "Cost per hour of voicemail audio" },
+              "total_cost": { "type": "number", "description": "Combined drop + duration cost" }
+            }
+          },
+          "calls_outbound": {
+            "type": "object",
+            "properties": {
+              "minutes": { "type": "number", "description": "Total outbound call minutes" },
+              "cost": { "type": "number", "description": "Total cost" },
+              "unit_cost": { "type": "number", "description": "Cost per minute" },
+              "unit": { "type": "string", "description": "Unit type", "example": "minutes" }
+            }
+          },
+          "calls_inbound": {
+            "type": "object",
+            "properties": {
+              "minutes": { "type": "number", "description": "Total inbound call minutes" },
+              "cost": { "type": "number", "description": "Total cost" },
+              "unit": { "type": "string", "description": "Unit type", "example": "minutes" }
+            }
+          },
+          "total_cost": {
+            "type": "number",
+            "description": "Total cost across all channels in USD"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code",
+            "example": "usd"
+          }
+        },
+        "example": {
+          "object": "billing.usage_summary",
+          "organization": "Acme Collections",
+          "period": { "start_date": "2025-02-01", "end_date": "2025-02-28" },
+          "sms": { "count": 185040, "cost": 5551.20, "unit_cost": 0.03, "unit": "segments" },
+          "mms": { "count": 4000, "cost": 120.00, "unit_cost": 0.03, "unit": "segments" },
+          "email": { "count": 15000, "cost": 0.00, "unit_cost": 0.00, "unit": "messages" },
+          "rvm": { "drops": 50000, "drop_cost": 700.00, "drop_unit_cost": 0.014, "duration_seconds": 150000, "duration_hours": 41.67, "duration_cost": 137.50, "duration_unit_cost_per_hour": 3.30, "total_cost": 837.50 },
+          "calls_outbound": { "minutes": 10000, "cost": 1080.00, "unit_cost": 0.108, "unit": "minutes" },
+          "calls_inbound": { "minutes": 5100, "cost": 1190.00, "unit": "minutes" },
+          "total_cost": 8778.70,
+          "currency": "usd"
+        }
+      },
+      "BillingError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Error type",
+                "enum": ["invalid_request_error", "configuration_error", "access_denied", "api_error"]
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable error message"
+              },
+              "param": {
+                "type": "string",
+                "description": "The parameter that caused the error (if applicable)"
+              }
+            }
+          }
+        },
+        "example": {
+          "error": {
+            "type": "invalid_request_error",
+            "message": "start_date is required and must be YYYY-MM-DD or a full ISO 8601 UTC timestamp",
+            "param": "start_date"
           }
         }
       }

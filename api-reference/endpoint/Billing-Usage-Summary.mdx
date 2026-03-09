@@ -1,0 +1,28 @@
+---
+title: 'Billing Usage Summary'
+openapi: 'GET /billing/usage-summary'
+---
+
+## Date Handling
+
+Both `start_date` and `end_date` accept two formats:
+
+- **Date only** (`YYYY-MM-DD`) — `start_date` defaults to midnight UTC, `end_date` defaults to 23:59:59 UTC. Simplest option when you want full-day UTC boundaries.
+- **Full ISO timestamp** (`YYYY-MM-DDTHH:mm:ssZ`) — Exact UTC boundaries. Use this when you need timezone-specific alignment.
+
+You can mix formats (e.g., date-only for start, ISO timestamp for end). Stripe meters are accurate to the hour.
+
+### Timezone-Aligned Example
+
+To query "February in US Eastern Time", send:
+
+```
+start_date=2025-02-01T05:00:00Z
+end_date=2025-03-01T04:59:59Z
+```
+
+## Notes
+
+- Costs reflect your organization's subscription pricing when available, otherwise standard rates are used
+- RVM has two-part pricing: a per-drop fee plus a per-hour duration fee — both are included in `rvm.total_cost`
+- All costs are in USD and rounded to 2 decimal places
