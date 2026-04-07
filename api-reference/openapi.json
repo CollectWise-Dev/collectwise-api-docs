@@ -521,6 +521,57 @@
         }
       }
     },
+    "/clean-numbers": {
+      "get": {
+        "summary": "Get clean numbers",
+        "description": "Returns a list of active clean phone numbers that can be used as caller IDs for voicemail drops. Numbers are filtered by group (overseas or inhouse) and scoped to your organization.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "query",
+            "description": "The group of clean numbers to retrieve",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["overseas", "inhouse"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clean numbers retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CleanNumbersResponse"
+                },
+                "example": {
+                  "numbers": [
+                    { "phone_number": "+18667734413" }
+                  ],
+                  "count": 1,
+                  "group": "overseas"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing group parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Invalid or missing group parameter",
+                  "message": "group must be one of: overseas, inhouse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/rpcCall": {
       "post": {
         "summary": "Make an RPC Call",
@@ -1531,6 +1582,34 @@
           }
         },
         "required": ["recording_url"]
+      },
+      "CleanNumbersResponse": {
+        "type": "object",
+        "properties": {
+          "numbers": {
+            "type": "array",
+            "description": "List of active clean phone numbers",
+            "items": {
+              "type": "object",
+              "properties": {
+                "phone_number": {
+                  "type": "string",
+                  "description": "Phone number in E.164 format"
+                }
+              }
+            }
+          },
+          "count": {
+            "type": "integer",
+            "description": "Total number of clean numbers returned"
+          },
+          "group": {
+            "type": "string",
+            "description": "The group that was queried",
+            "enum": ["overseas", "inhouse"]
+          }
+        },
+        "required": ["numbers", "count", "group"]
       },
       "Error": {
         "type": "object",
