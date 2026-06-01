@@ -1267,7 +1267,7 @@
           },
           "paymentLink": {
             "type": "string",
-            "description": "Link where the debtor can pay their balance, included in outreach messages. Accepts a full URL or a domain (e.g., https://example.com/pay or www.example.com)."
+            "description": "Link where the debtor can pay their balance, included in outreach. Accepts a full URL or a domain (e.g., https://example.com/pay or www.example.com)."
           },
           "customWorkflowID": {
             "type": "string",
