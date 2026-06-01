@@ -1265,6 +1265,10 @@
             "format": "float",
             "description": "Total amount paid by the debtor so far"
           },
+          "paymentLink": {
+            "type": "string",
+            "description": "Link where the debtor can pay their balance, included in outreach messages. Accepts a full URL or a domain (e.g., https://example.com/pay or www.example.com)."
+          },
           "customWorkflowID": {
             "type": "string",
             "description": "Custom workflow identifier for the debtor"
@@ -1486,6 +1490,11 @@
             "type": "number",
             "format": "float",
             "description": "Total amount paid by the debtor so far"
+          },
+          "paymentLink": {
+            "type": "string",
+            "nullable": true,
+            "description": "Payment link associated with the debtor, or null if none was provided."
           },
           "customWorkflowID": {
             "type": "string",
