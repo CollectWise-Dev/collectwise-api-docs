@@ -1494,7 +1494,7 @@
           "paymentLink": {
             "type": "string",
             "nullable": true,
-            "description": "Payment link associated with the debtor, or null if none was provided."
+            "description": "Payment link associated with the debtor"
           },
           "customWorkflowID": {
             "type": "string",
