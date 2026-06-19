@@ -1,78 +1,53 @@
 ---
-title: 'Texting Overview'
-description: 'Send a single, ad-hoc templated SMS to a phone number, preview how many segments it will use, and check delivery status.'
+title: "Texting Overview"
+description: "Send a single, ad-hoc templated SMS to a phone number, preview how many segments it will use, and check delivery status."
 ---
 
 ## How it works
 
-The Texting endpoints let you send one-off SMS messages built from templates we
-configure for your account. Your account is identified by your `collectwise_key`
-API key, sent in the header on every request.
+The Texting endpoints let you send one-off SMS messages built from templates we configure for your account. Your account is identified by your `collectwise_key` API key, sent in the header on every request.
 
 <Note>
-  Texting must be enabled for your organization before these endpoints will
-  respond. If you receive a `403` on every call, contact us to have your
-  organization enabled.
+  Texting must be enabled for your organization before these endpoints will respond. If you receive a `403` on every call, contact us to have your organization enabled.
 </Note>
 
 A typical integration is:
 
 <Steps>
   <Step title="Discover templates">
-    Call [List SMS Templates](/api-reference/endpoint/Text-List-Templates) to
-    see the templates available to your account and the placeholder variables
-    each one expects.
+    Call [List SMS Templates](/api-reference/endpoint/Text-List-Templates) to see the templates available to your account and the placeholder variables each one expects.
   </Step>
   <Step title="(Optional) Preview segments">
-    Call [Calculate SMS Segments](/api-reference/endpoint/Text-Segments) to see
-    how many SMS segments a message or rendered template will use, before
-    sending.
+    Call [Calculate SMS Segments](/api-reference/endpoint/Text-Segments) to see how many SMS segments a message or rendered template will use, before sending.
   </Step>
   <Step title="Send">
-    Call [Send a Text](/api-reference/endpoint/Text-Send) with the `templateId`
-    and a `variables` object filling in every placeholder. A `200` means the
-    message was accepted and queued, and returns a `messageId`.
+    Call [Send a Text](/api-reference/endpoint/Text-Send) with the `templateId`, `destination`, and a `variables` object filling in every placeholder. A `200` means the message was accepted and queued, and returns a `messageId`.
   </Step>
   <Step title="Check status">
-    Poll [Get Text Status](/api-reference/endpoint/Text-Status) with the
-    `messageId`. Delivery reports arrive asynchronously, so check after a short
-    delay.
+    Poll [Get Text Status](/api-reference/endpoint/Text-Status) with the `messageId`. Delivery reports arrive asynchronously, so check after a short delay.
   </Step>
 </Steps>
 
 ## Templates and variables
 
-Each template has a `templateId` and a `message` body containing `{placeholder}`
-tokens. The `placeholders` array on a template lists exactly which keys you must
-supply in `variables` when sending. If any placeholder is left unresolved, the
-send fails with `400` rather than texting a literal `{placeholder}` to the
-recipient.
+Each template has a `templateId` and a `message` body containing `{placeholder}` tokens. The `placeholders` array on a template lists exactly which keys you must supply in `variables` when sending. If any placeholder is left unresolved, the send fails with `400` rather than texting a literal `{placeholder}` to the recipient.
 
-Placeholders use single curly braces and are matched exactly first, then
-normalized (case-insensitive, ignoring `#` and spaces), so `{FirstName}`,
-`{#FileNumber}`, and `{Variable Name}` all work.
+Placeholders use single curly braces and are matched exactly first, then normalized (case-insensitive, ignoring `#` and spaces), so `{FirstName}`, `{#FileNumber}`, and `{Variable Name}` all work.
 
 ## Segments and encoding
 
-SMS messages are billed and split into segments by character count and
-encoding, matching the
-[Twilio segment calculator](https://twiliodeved.github.io/message-segment-calculator/):
+SMS messages are billed and split into segments by character count and encoding, matching the [Twilio segment calculator](https://twiliodeved.github.io/message-segment-calculator/):
 
-- **GSM-7**: 160 characters in a single segment, 153 per segment when the
-  message spans multiple segments.
-- **UCS-2**: 70 characters single, 67 per segment when multi-part. Any character
-  outside the GSM-7 set (emoji, smart quotes, most CJK) forces the entire
-  message to UCS-2.
+- **GSM-7**: 160 characters in a single segment, 153 per segment when the message spans multiple segments.
+- **UCS-2**: 70 characters single, 67 per segment when multi-part. Any character outside the GSM-7 set (emoji, smart quotes, most CJK) forces the entire message to UCS-2.
 - The extended GSM-7 characters `{ } [ ] ~ \ | ^ €` cost two units each.
 
 ## Delivery status
 
-A message moves through `Queued` → `Sent` → `Delivered`, or ends in `Rejected` /
-`Failed` / `Undelivered`. For failed messages, `failureClassification` indicates
-whether a retry is worthwhile:
+A message moves through `Queued` → `Sent` → `Delivered`, or ends in `Rejected` / `Failed` / `Undelivered`. For failed messages, `failureClassification` indicates whether a retry is worthwhile:
 
 | Classification | Meaning |
-|---|---|
+| --- | --- |
 | `FATAL` | Will never deliver as-is (e.g. invalid number, blocked, flagged as spam). Do not retry. |
 | `NON_FATAL` | Transient (e.g. absent subscriber, temporary carrier failure). `retryRecommended` is `true`. |
 | `null` | The carrier reason was not recognized. |
@@ -80,7 +55,6 @@ whether a retry is worthwhile:
 ## Rate limits
 
 - **Send**: 10 requests per minute per organization.
-- **Reads** (templates, segments, status): 60 requests per minute per
-  organization.
+- **Reads** (templates, segments, status): 60 requests per minute per organization.
 
 Exceeding a limit returns `429` with a `Retry-After` header.
