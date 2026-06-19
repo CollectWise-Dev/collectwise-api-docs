@@ -1184,8 +1184,8 @@
                   "count": 1,
                   "templates": [
                     {
-                      "templateId": 700,
-                      "accountId": "50041",
+                      "templateId": 100,
+                      "accountId": "99999",
                       "message": "{Consumer Name}, {Company Name} is a debt collector attempting to collect a debt. Visit {Website Payment} using your account# {Account Number} or call {Phone#}. Reply STOP to opt out.",
                       "placeholders": [
                         "Consumer Name",
@@ -1253,8 +1253,8 @@
                   "$ref": "#/components/schemas/SmsTemplate"
                 },
                 "example": {
-                  "templateId": 700,
-                  "accountId": "50041",
+                  "templateId": 100,
+                  "accountId": "99999",
                   "message": "{Consumer Name}, {Company Name} is a debt collector attempting to collect a debt. Visit {Website Payment} using your account# {Account Number} or call {Phone#}. Reply STOP to opt out.",
                   "placeholders": [
                     "Consumer Name",
@@ -1358,7 +1358,7 @@
                 },
                 "template": {
                   "value": {
-                    "templateId": 700,
+                    "templateId": 100,
                     "variables": {
                       "Consumer Name": "Jane"
                     }
@@ -1456,11 +1456,11 @@
               },
               "example": {
                 "destination": "3313048434",
-                "templateId": 700,
+                "templateId": 100,
                 "variables": {
                   "Consumer Name": "Jane Doe",
-                  "Company Name": "TSC Accounts Receivable",
-                  "Website Payment": "https://pay.collectwise.com/tsc",
+                  "Company Name": "Acme Recovery Group",
+                  "Website Payment": "https://pay.collectwise.com/acme",
                   "Account Number": "ACME-0001",
                   "Phone#": "800-555-0100"
                 },
