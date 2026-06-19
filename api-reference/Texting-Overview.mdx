@@ -6,8 +6,8 @@ description: 'Send a single, ad-hoc templated SMS to a phone number, preview how
 ## How it works
 
 The Texting endpoints let you send one-off SMS messages built from templates we
-configure for your account. Your organization is resolved from your
-`collectwise_key` API key, so there is no client id in the path.
+configure for your account. Your account is identified by your `collectwise_key`
+API key, sent in the header on every request.
 
 <Note>
   Texting must be enabled for your organization before these endpoints will
