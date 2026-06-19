@@ -1151,6 +1151,506 @@
           }
         }
       }
+    },
+    "/text/templates": {
+      "get": {
+        "summary": "List SMS templates",
+        "description": "Lists every SMS template available to your organization, including the placeholder variables each one expects. Call this first to discover the `templateId` and the variable names to pass to the send endpoint.",
+        "responses": {
+          "200": {
+            "description": "Templates available to your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "count",
+                    "templates"
+                  ],
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "description": "Number of templates returned."
+                    },
+                    "templates": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SmsTemplate"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "count": 1,
+                  "templates": [
+                    {
+                      "templateId": 700,
+                      "accountId": "50041",
+                      "message": "{Consumer Name}, {Company Name} is a debt collector attempting to collect a debt. Visit {Website Payment} using your account# {Account Number} or call {Phone#}. Reply STOP to opt out.",
+                      "placeholders": [
+                        "Consumer Name",
+                        "Company Name",
+                        "Website Payment",
+                        "Account Number",
+                        "Phone#"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Texting is not enabled for your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Texting is not enabled for this organization"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. See the Retry-After response header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Too many requests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/text/templates/{templateId}": {
+      "get": {
+        "summary": "Get an SMS template",
+        "description": "Fetches a single template's body and its placeholder variables.",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The template's identifier."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The template.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmsTemplate"
+                },
+                "example": {
+                  "templateId": 700,
+                  "accountId": "50041",
+                  "message": "{Consumer Name}, {Company Name} is a debt collector attempting to collect a debt. Visit {Website Payment} using your account# {Account Number} or call {Phone#}. Reply STOP to opt out.",
+                  "placeholders": [
+                    "Consumer Name",
+                    "Company Name",
+                    "Website Payment",
+                    "Account Number",
+                    "Phone#"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`templateId` is not a valid integer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "templateId must be an integer"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Texting is not enabled for your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Texting is not enabled for this organization"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No template with that id exists in your organization's account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Template not found"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Too many requests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/text/segments": {
+      "post": {
+        "summary": "Calculate SMS segments",
+        "description": "Returns how many SMS segments a message will use, matching the Twilio segment calculator. Provide either a raw `message`, or a `templateId` with `variables` (the template is rendered first, then counted). This endpoint does not send anything.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "description": "A raw message to measure. Provide this OR templateId."
+                  },
+                  "templateId": {
+                    "type": "integer",
+                    "description": "A template to render and measure. Provide this OR message."
+                  },
+                  "variables": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Values substituted into the template's placeholders (when using templateId)."
+                  }
+                }
+              },
+              "examples": {
+                "raw message": {
+                  "value": {
+                    "message": "Hi Jane, your balance is $430.10. Reply STOP to opt out."
+                  }
+                },
+                "template": {
+                  "value": {
+                    "templateId": 700,
+                    "variables": {
+                      "Consumer Name": "Jane"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Segment usage for the message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SegmentResult"
+                },
+                "example": {
+                  "encoding": "GSM-7",
+                  "characterCount": 57,
+                  "gsm7Length": 57,
+                  "segmentCount": 1,
+                  "maxCharsPerSegment": 160,
+                  "messageSizeBits": 399
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Body had neither `message` nor `templateId`, or `templateId` was not an integer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Provide either message or templateId"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Too many requests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/text/send": {
+      "post": {
+        "summary": "Send a one-time text",
+        "description": "Renders an SMS template with the supplied variables and sends it to one phone number. A 200 means the message was accepted and queued, not yet delivered — use the returned `messageId` with the status endpoint. Sandbox API keys are rejected.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "destination",
+                  "templateId",
+                  "variables",
+                  "debtorId"
+                ],
+                "properties": {
+                  "destination": {
+                    "type": "string",
+                    "description": "US phone number. `3313048434`, `13313048434`, and `+1 (331) 304-8434` are all accepted."
+                  },
+                  "templateId": {
+                    "type": "integer",
+                    "description": "The template to send. Must belong to your organization's account."
+                  },
+                  "variables": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Values substituted into the template's `{placeholder}` tokens. Use `{}` if the template has none. If any placeholder is left unresolved, the request fails with 400 rather than texting a literal `{token}`."
+                  },
+                  "debtorId": {
+                    "type": "string",
+                    "description": "Your reference for this recipient (e.g. your account or reference number). Forwarded as-is; replies and the message record are tracked against it."
+                  }
+                }
+              },
+              "example": {
+                "destination": "3313048434",
+                "templateId": 700,
+                "variables": {
+                  "Consumer Name": "Jane Doe",
+                  "Company Name": "TSC Accounts Receivable",
+                  "Website Payment": "https://pay.collectwise.com/tsc",
+                  "Account Number": "ACME-0001",
+                  "Phone#": "800-555-0100"
+                },
+                "debtorId": "your-reference-number"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message accepted and queued.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "messageId"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "messageId": {
+                      "type": "string",
+                      "description": "Delivery-tracking ID. Use it with the status endpoint."
+                    },
+                    "segments": {
+                      "$ref": "#/components/schemas/SegmentResult"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "messageId": "1b1f0a9e-6f4e-4f4b-9a2e-1f2d3c4b5a69",
+                  "segments": {
+                    "encoding": "GSM-7",
+                    "segmentCount": 1,
+                    "characterCount": 142,
+                    "maxCharsPerSegment": 160
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body: bad phone number, missing or non-integer `templateId`, missing `debtorId`, bad `variables`, or unresolved template placeholders.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Missing variables for placeholders: Consumer Name"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Texting not enabled for your organization, the template is not in your account, or a sandbox key was used.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Template is not available for your account"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Template not found"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (10 sends/min per organization).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Too many requests"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The SMS service rejected or failed the send.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Failed to send message"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Internal server error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/text/status/{messageId}": {
+      "get": {
+        "summary": "Get text delivery status",
+        "description": "Returns delivery status for a previously sent message. `messageId` is the value returned by the send endpoint. Delivery reports arrive asynchronously from the carrier, so poll after a short delay.",
+        "parameters": [
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The messageId returned by the send endpoint."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current delivery status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageStatus"
+                },
+                "example": {
+                  "messageId": "1b1f0a9e-6f4e-4f4b-9a2e-1f2d3c4b5a69",
+                  "status": "Delivered",
+                  "delivered": true,
+                  "failed": false,
+                  "failureClassification": null,
+                  "retryRecommended": false,
+                  "createdAt": "2026-06-12T18:21:09.000Z",
+                  "updatedAt": "2026-06-12T18:21:14.000Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No message with that id for your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Message not found"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Too many requests"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1821,6 +2321,135 @@
             "message": "start_date is required and must be YYYY-MM-DD or a full ISO 8601 UTC timestamp",
             "param": "start_date"
           }
+        }
+      },
+      "SmsTemplate": {
+        "type": "object",
+        "required": [
+          "templateId",
+          "accountId",
+          "message",
+          "placeholders"
+        ],
+        "properties": {
+          "templateId": {
+            "type": "integer",
+            "description": "Identifier for the template."
+          },
+          "accountId": {
+            "type": "string",
+            "description": "The account the template belongs to (your organization's configured account)."
+          },
+          "message": {
+            "type": "string",
+            "description": "The template body, containing `{placeholder}` tokens."
+          },
+          "placeholders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Variable names you must supply in `variables` when sending."
+          }
+        }
+      },
+      "SegmentResult": {
+        "type": "object",
+        "required": [
+          "encoding",
+          "characterCount",
+          "segmentCount",
+          "maxCharsPerSegment"
+        ],
+        "properties": {
+          "encoding": {
+            "type": "string",
+            "enum": [
+              "GSM-7",
+              "UCS-2"
+            ],
+            "description": "Encoding the message is sent with. Any non-GSM-7 character (emoji, smart quotes, most CJK) forces the whole message to UCS-2."
+          },
+          "characterCount": {
+            "type": "integer",
+            "description": "Number of characters in the message."
+          },
+          "gsm7Length": {
+            "type": "integer",
+            "description": "Length in GSM-7 units (extended characters such as { } [ ] ~ \\ | ^ € cost 2)."
+          },
+          "segmentCount": {
+            "type": "integer",
+            "description": "Number of SMS segments the message will use."
+          },
+          "maxCharsPerSegment": {
+            "type": "integer",
+            "description": "Max characters per segment for the chosen encoding (160 GSM-7, 70 UCS-2)."
+          },
+          "messageSizeBits": {
+            "type": "integer",
+            "description": "Total message size in bits."
+          }
+        }
+      },
+      "MessageStatus": {
+        "type": "object",
+        "required": [
+          "messageId",
+          "status",
+          "delivered",
+          "failed"
+        ],
+        "properties": {
+          "messageId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "Carrier status: Queued, Sent, Delivered, or Rejected / Failed / Undelivered on failure."
+          },
+          "delivered": {
+            "type": "boolean"
+          },
+          "failed": {
+            "type": "boolean"
+          },
+          "failureClassification": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "FATAL",
+              "NON_FATAL"
+            ],
+            "description": "On failed messages: FATAL (do not retry), NON_FATAL (transient, retry may succeed), or null when the carrier reason is unrecognized."
+          },
+          "retryRecommended": {
+            "type": "boolean",
+            "description": "True when the failure is NON_FATAL and a retry may succeed."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TextError": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Human-readable error message."
+          }
+        },
+        "example": {
+          "error": "Texting is not enabled for this organization"
         }
       }
     },
