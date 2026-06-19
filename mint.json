@@ -78,6 +78,17 @@
       ]
     },
     {
+      "group": "Texting",
+      "pages": [
+        "api-reference/Texting-Overview",
+        "api-reference/endpoint/Text-List-Templates",
+        "api-reference/endpoint/Text-Get-Template",
+        "api-reference/endpoint/Text-Segments",
+        "api-reference/endpoint/Text-Send",
+        "api-reference/endpoint/Text-Status"
+      ]
+    },
+    {
       "group": "Billing",
       "pages": [
         "api-reference/endpoint/Billing-Usage-Summary"
