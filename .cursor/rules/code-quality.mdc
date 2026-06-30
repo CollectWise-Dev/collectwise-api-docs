@@ -1,0 +1,10 @@
+---
+description: Make sure the code you create is clean, performant, and follows the DRY principle.
+alwaysApply: true
+---
+
+Make sure the code you create is clean, performant, and follows the DRY principle.
+
+Ensure modular, clean, concise, and well-written code that does exactly what the functionality at hand requires — nothing more.
+
+Do NOT add a "Co-Authored-By: Claude" trailer to git commit messages, and do NOT add a "Generated with Claude Code" (or any AI-attribution) line to PR bodies. Commits and pull requests must not be attributed to any AI agent.

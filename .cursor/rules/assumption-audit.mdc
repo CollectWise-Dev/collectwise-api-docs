@@ -1,0 +1,16 @@
+---
+description: Audit your reasoning before acting:
+alwaysApply: true
+---
+
+Audit your reasoning before acting:
+
+1. **Name the assumptions.** What are you assuming about the user's intent, the code's behavior, the environment, the data shape, or the task scope?
+2. **Test grounding.** Is each assumption supported by (a) something the user said this turn, (b) tool output you've already read, or (c) memory from a prior session file? If none apply, the assumption is UNVERIFIED.
+3. **Resolve before acting.**
+   - Verify via a tool call (Read / Grep / Bash / REST) when cheap.
+   - Ask the user when the answer is non-obvious or the assumption is load-bearing.
+   - State the assumption explicitly in your reply when proceeding anyway ("I'm assuming X — correct if wrong").
+4. **Escalate for high-stakes work.** For production-touching changes, client-facing code, or reasoning chains longer than ~3 steps, run a structured assumption audit.
+
+Silence = danger. Unverified assumptions are the dominant source of shipped bugs and wasted rework.

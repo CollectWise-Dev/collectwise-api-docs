@@ -1,0 +1,29 @@
+---
+description: CollectWise observability — prod logs via Grafana Cloud Loki
+alwaysApply: true
+---
+
+# CollectWise observability — prod logs via Grafana Cloud Loki
+
+**When the user asks anything that boils down to "what is service X doing in prod" / "did Y happen" / "why did Z fail" / "show me logs from…" / errors / activity / job runs — the first move is a Loki query.** Do NOT propose `fly logs`, `aws logs tail`, the AWS console, or sshing into a machine unless (a) sub-second tail latency is required and the user said so, or (b) the Loki pipeline itself is suspected broken.
+
+## Two transports (same data, same read token)
+- **MCP-capable runtimes** (Claude, Cursor, OpenCode): use `mcp__grafana__query_loki_logs` against the unified Loki tenant. Load it via ToolSearch (`select:mcp__grafana__query_loki_logs`) if not present.
+- **Shell-only runtimes** (Codex cloud, CI, any sandbox without MCP): use `grafana-query.sh '<LogQL>' [--since 1h] [--limit 100]` (curl → Grafana instance proxy). Requires `GRAFANA_SERVICE_ACCOUNT_TOKEN` (read-only `glsa_` Viewer token) in the environment.
+
+Datasource UID: `grafanacloud-logs`. Stack: `https://collectwise.grafana.net`. All access read-only.
+
+## Canonical labels
+- `service` — `ai-paralegal`, `alert-probe`, `collectwise-api` (errors only), `collectwise-document-generation`, `email-service`, `forwarder-gateway`, `jambonz`, `livekit-sip`, `retell-voice`, `sftp-webhook`, `sms-messaging-service` (errors only), `workflow-scheduling`.
+- `env` — `prod`, `dev`, `synthetic`.
+- `source` — `fly` (Fly.io via Vector) or `cloudwatch` (Lambda via Amazon Data Firehose).
+
+## Query patterns
+- Single service: `{service="<name>"}`
+- Errors across every service: `{service=~".+"} |~ "(?i)error"`
+- Pipeline filter: `{source="fly"}` / `{source="cloudwatch"}`
+- Error rate: `sum by (service) (count_over_time({service=~".+"} |~ "(?i)error" [5m]))`
+
+## Gotchas
+- `collectwise-api` and `sms-messaging-service` ship **errors only** through a CloudWatch subscription filter — absence in label values means nothing errored, not a broken pipeline.
+- CloudWatch tail latency ~15–20s; Fly ~5–15s. For sub-second on Fly use `fly logs --app <name>`; on Lambda use `aws logs tail --follow` (both bypass Loki).

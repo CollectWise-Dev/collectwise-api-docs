@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "vault-mcp": {
+      "command": "python3",
+      "args": ["${userHome}/agent-configs/shared/mcp/vault-mcp/server.py"],
+      "env": { "SHADOW_LIB": "${userHome}/agent-configs/shared/bin" }
+    },
+    "grafana": {
+      "command": "uvx",
+      "args": ["mcp-grafana", "--disable-write"],
+      "env": {
+        "GRAFANA_URL": "https://collectwise.grafana.net",
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "${env:GRAFANA_SERVICE_ACCOUNT_TOKEN}"
+      }
+    }
+  }
+}

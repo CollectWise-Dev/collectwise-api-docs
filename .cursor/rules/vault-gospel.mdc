@@ -1,0 +1,23 @@
+---
+description: The Obsidian vault is the canonical knowledge store
+alwaysApply: true
+---
+
+# The Obsidian vault is the canonical knowledge store
+
+Decisions, runbooks, ADRs, research, and session memory live in the vault — treat it as the source of truth. Code lives at its source path; the vault wikilinks to it. **Query the vault before generating ungrounded answers about the system.**
+
+## Access (transport-agnostic)
+- Search: `vault-cli.sh search "<query>"` (hybrid semantic+graph) or the `vault_search` MCP tool. Returns ranked notes with scores.
+- Read: `vault-cli.sh read <relpath>` or `vault_read`.
+- On the laptop the live `obsidian` CLI / Local REST API are also available; in a cloud sandbox the vault is a cloned git repo reached via the same `vault-cli.sh` / `vault-mcp` (resolved automatically by `vault-resolve.sh`).
+- The full conventions ("gospel") live in the vault's own `CLAUDE.md` (== `AGENTS.md`). Read it first when working in the vault.
+
+## Conventions
+- Notes only (no code/CSVs/binaries/>10MB — those stay at source and are wikilinked). Kebab-case filenames, ISO dates, YAML frontmatter, `[[wikilinks]]` over markdown links. ADRs: `decisions/NNNN-<slug>.md`.
+- Session memory: `_sessions/YYYY-MM-DD/HHMM-<agent>-<slug>.md`. Per-service knowledge mirrors `~/collectwise/repos/` under `collectwise/repos/<repo>/` (README, architecture, decisions, runbooks, incidents).
+
+## Session discipline
+1. **Load context at start** (recall): read relevant `_sessions/` + project notes before acting.
+2. **Write a session file on close** (handoff): summary + decisions, not transcripts.
+3. **Promote durable insight**: a decision → an ADR; a procedure → a runbook; otherwise a line in the daily note.
