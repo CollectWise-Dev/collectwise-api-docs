@@ -524,7 +524,7 @@
     "/clean-numbers": {
       "get": {
         "summary": "Get clean numbers",
-        "description": "Returns a list of active clean phone numbers that can be used as caller IDs for voicemail drops. Numbers are filtered by group (overseas or inhouse) and scoped to your organization.",
+        "description": "Returns a list of active clean phone numbers that can be used as caller IDs for voicemail drops. Numbers are filtered by group and scoped to your organization.",
         "parameters": [
           {
             "name": "group",
@@ -533,7 +533,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["overseas", "inhouse"]
+              "enum": ["overseas", "inhouse", "sms_inbound"]
             }
           }
         ],
@@ -564,7 +564,7 @@
                 },
                 "example": {
                   "error": "Invalid or missing group parameter",
-                  "message": "group must be one of: overseas, inhouse"
+                  "message": "group must be one of: overseas, inhouse, sms_inbound"
                 }
               }
             }
@@ -2115,7 +2115,7 @@
           "group": {
             "type": "string",
             "description": "The group that was queried",
-            "enum": ["overseas", "inhouse"]
+            "enum": ["overseas", "inhouse", "sms_inbound"]
           }
         },
         "required": ["numbers", "count", "group"]
