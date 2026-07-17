@@ -22,7 +22,7 @@
     "/payments": {
       "get": {
         "summary": "List Payments",
-        "description": "Returns payments collected for your organization over a date range, newest first. Use this for same-day reconciliation sweeps or to backfill windows missed by the Payment Received webhook. Failed retry attempts on the same call are collapsed to the most recent attempt; successful payments are never collapsed.",
+        "description": "Returns payments collected for your organization over a date range, newest first.",
         "parameters": [
           {
             "name": "start_date",

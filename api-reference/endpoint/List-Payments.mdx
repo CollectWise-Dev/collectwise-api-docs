@@ -34,10 +34,6 @@ GET /payments?start_date=2026-06-01&end_date=2026-06-30&limit=100&starting_after
 
 Cursor pages are stable: a payment recorded between two page requests cannot cause rows to repeat or be skipped.
 
-## Deduplication
-
-If the same call produced multiple failed attempts, only the most recent failed attempt is returned. Successful payments are never collapsed — a failed attempt followed by a success on the same call returns both rows, and a partial payment plus its remainder charge returns both rows.
-
 ## Posting Payments
 
 - Use `id` as your idempotency key. It is stable across polls and unique per payment. `transaction_id` may be null depending on the processor.
