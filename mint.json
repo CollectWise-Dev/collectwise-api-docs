@@ -68,6 +68,12 @@
       ]
     },
     {
+      "group": "Payments",
+      "pages": [
+        "api-reference/endpoint/List-Payments"
+      ]
+    },
+    {
       "group": "Communications",
       "pages": [
         "api-reference/endpoint/Drop-Voicemail",

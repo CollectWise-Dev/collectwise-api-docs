@@ -1,0 +1,49 @@
+---
+title: 'List Payments'
+openapi: 'GET /payments'
+---
+
+## Date Handling
+
+Both `start_date` and `end_date` accept two formats:
+
+- **Date only** (`YYYY-MM-DD`) — Interpreted as full UTC days. `start_date` begins at midnight UTC; `end_date` covers that entire UTC day, including payments recorded in the final sub-second (e.g. `23:59:59.750Z`).
+- **Full ISO timestamp** (`YYYY-MM-DDTHH:mm:ssZ`) — Exact UTC boundaries, inclusive on both ends. Use this when you need timezone-specific alignment.
+
+You can mix formats, and the range may span at most 366 days.
+
+### Timezone-Aligned Example
+
+To query the US Eastern Time day of June 18, 2026, send:
+
+```
+start_date=2026-06-18T04:00:00Z
+end_date=2026-06-19T03:59:59Z
+```
+
+For contiguous polling windows, date-only params are the safest choice — each day hands off cleanly to the next. With explicit ISO timestamps, dedupe on the payment `id` in case a payment lands exactly on a window boundary.
+
+## Pagination
+
+Results are ordered newest first. When `pagination.has_more` is `true`, pass `pagination.next_cursor` as `starting_after` on the next request and keep the same date range and filters:
+
+```
+GET /payments?start_date=2026-06-01&end_date=2026-06-30&limit=100
+GET /payments?start_date=2026-06-01&end_date=2026-06-30&limit=100&starting_after=<next_cursor>
+```
+
+Cursor pages are stable: a payment recorded between two page requests cannot cause rows to repeat or be skipped.
+
+## Deduplication
+
+If the same call produced multiple failed attempts, only the most recent failed attempt is returned. Successful payments are never collapsed — a failed attempt followed by a success on the same call returns both rows, and a partial payment plus its remainder charge returns both rows.
+
+## Posting Payments
+
+- Use `id` as your idempotency key. It is stable across polls and unique per payment. `transaction_id` may be null depending on the processor.
+- `recurrence_rule`, `total_installments`, and `next_payment_date` are set on payment-plan installments and null on one-time payments — together they distinguish "installment 3 of 12" from a one-off when posting.
+- `phone` is derived from the originating call, falling back to the debtor record; it is null for payment-link records.
+
+## Relationship to the Payment Received Webhook
+
+The [Payment Received webhook](/api-reference/Payment-Received) fires once, in real time, when a payment is captured — the right integration for posting immediately without polling. `GET /payments` is the complement: same-day reconciliation sweeps, catching up after downtime, or backfilling a window your webhook consumer missed. Both surface the same payment `id`, so you can dedupe between the two streams.

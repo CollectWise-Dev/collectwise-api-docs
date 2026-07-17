@@ -19,6 +19,156 @@
     }
   ],
   "paths": {
+    "/payments": {
+      "get": {
+        "summary": "List Payments",
+        "description": "Returns payments collected for your organization over a date range, newest first. Use this for same-day reconciliation sweeps or to backfill windows missed by the Payment Received webhook. Failed retry attempts on the same call are collapsed to the most recent attempt; successful payments are never collapsed.",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "description": "Start of date range, inclusive. Accepts YYYY-MM-DD (interpreted as 00:00:00 UTC) or a full ISO 8601 UTC timestamp like 2026-06-18T04:00:00Z",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "description": "End of date range. Accepts YYYY-MM-DD (covers that entire UTC day, including the final sub-second) or a full ISO 8601 UTC timestamp (inclusive). Must be on or after start_date and within 366 days of it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Filter by payment status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "success",
+                "failed",
+                "declined",
+                "error"
+              ]
+            }
+          },
+          {
+            "name": "payment_type",
+            "in": "query",
+            "required": false,
+            "description": "Filter by payment type. flat = one-time payment, subscription = payment-plan installment, settlement = settlement payment, remainder = remainder charge after a partial payment",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "flat",
+                "subscription",
+                "settlement",
+                "remainder"
+              ]
+            }
+          },
+          {
+            "name": "payment_method",
+            "in": "query",
+            "required": false,
+            "description": "Filter by payment method (matched case-insensitively)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ach",
+                "card"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size. Defaults to 50, maximum 100.",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Pagination cursor: the id of the last payment on the previous page (also returned as pagination.next_cursor). Must reference a payment of your organization inside the queried date range.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payments retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentsList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - missing or malformed dates, a date range over 366 days, an unknown filter value, a repeated query parameter, or a starting_after cursor outside the queried range",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentsError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key is not associated with an organization. Contact CollectWise support.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentsError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "example": {
+                    "error": "Forbidden: Invalid API Key - Contact CollectWise Support for Assistance"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentsError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/debtor": {
       "post": {
         "summary": "Create a new debtor",
@@ -1655,6 +1805,219 @@
   },
   "components": {
     "schemas": {
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Payment identifier. Stable across polls and unique per payment - use this as your idempotency key when posting to your system."
+          },
+          "object": {
+            "type": "string",
+            "description": "Object type identifier",
+            "example": "payment"
+          },
+          "debtor_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "The account reference you supplied in the placement file"
+          },
+          "client_name": {
+            "type": "string",
+            "description": "Client name the payment was collected under"
+          },
+          "call_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Call that produced the payment, or a pymts_-prefixed id for payment-link records"
+          },
+          "amount": {
+            "type": "number",
+            "nullable": true,
+            "description": "Payment amount in USD (decimal, not minor units)"
+          },
+          "currency": {
+            "type": "string",
+            "example": "usd"
+          },
+          "processor": {
+            "type": "string",
+            "description": "Payment processor that handled the charge"
+          },
+          "payment_type": {
+            "type": "string",
+            "enum": [
+              "flat",
+              "subscription",
+              "settlement",
+              "remainder"
+            ],
+            "description": "flat = one-time, subscription = payment-plan installment, settlement = settlement payment, remainder = remainder charge after a partial payment"
+          },
+          "payment_method": {
+            "type": "string",
+            "description": "Payment method as stored (letter case may vary, e.g. CARD or ACH)"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failed",
+              "declined",
+              "error"
+            ],
+            "description": "Payment outcome"
+          },
+          "transaction_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Processor transaction id where the processor returned one. May be null - prefer id for idempotency."
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "description": "Phone number associated with the payment, derived from the originating call or the debtor record. Null when neither is available (e.g. payment-link records)."
+          },
+          "recurrence_rule": {
+            "type": "string",
+            "nullable": true,
+            "description": "Recurrence rule for payment-plan installments; null on one-time payments"
+          },
+          "total_installments": {
+            "type": "string",
+            "nullable": true,
+            "description": "Total number of installments in the plan; null on one-time payments"
+          },
+          "next_payment_date": {
+            "type": "string",
+            "nullable": true,
+            "description": "Next scheduled installment date (ISO 8601 UTC); null on one-time payments"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "When the payment was recorded (ISO 8601 UTC with millisecond precision)"
+          }
+        }
+      },
+      "PaymentsList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "Object type identifier",
+            "example": "list.payments"
+          },
+          "period": {
+            "type": "object",
+            "properties": {
+              "start_date": {
+                "type": "string",
+                "description": "The start_date you supplied, echoed verbatim"
+              },
+              "end_date": {
+                "type": "string",
+                "description": "The end_date you supplied, echoed verbatim"
+              }
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "description": "Page size applied to this response"
+              },
+              "has_more": {
+                "type": "boolean",
+                "description": "Whether more payments exist beyond this page"
+              },
+              "next_cursor": {
+                "type": "string",
+                "nullable": true,
+                "description": "Pass as starting_after to fetch the next page; null on the last page"
+              }
+            }
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of payments on this page"
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Payment"
+            }
+          }
+        },
+        "example": {
+          "object": "list.payments",
+          "period": {
+            "start_date": "2026-06-18",
+            "end_date": "2026-06-18"
+          },
+          "pagination": {
+            "limit": 50,
+            "has_more": false,
+            "next_cursor": null
+          },
+          "count": 1,
+          "payments": [
+            {
+              "id": "pi_3RxT81GhIJk2LmNo",
+              "object": "payment",
+              "debtor_id": "ACC482910",
+              "client_name": "Sunrise Medical Group",
+              "call_id": "call_9f2ab61c3d",
+              "amount": 245.16,
+              "currency": "usd",
+              "processor": "stripe",
+              "payment_type": "flat",
+              "payment_method": "CARD",
+              "status": "success",
+              "transaction_id": "ch_3RxT81GhIJk2LmNo",
+              "phone": "+15555550123",
+              "recurrence_rule": null,
+              "total_installments": null,
+              "next_payment_date": null,
+              "created_at": "2026-06-18T14:22:07.318Z"
+            }
+          ]
+        }
+      },
+      "PaymentsError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Error type",
+                "enum": [
+                  "invalid_request_error",
+                  "authentication_error",
+                  "api_error"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable error message"
+              },
+              "param": {
+                "type": "string",
+                "description": "The parameter that caused the error (if applicable)"
+              }
+            }
+          }
+        },
+        "example": {
+          "error": {
+            "type": "invalid_request_error",
+            "message": "start_date is required and must be YYYY-MM-DD or a full ISO 8601 UTC timestamp (e.g. 2026-06-18T04:00:00Z)",
+            "param": "start_date"
+          }
+        }
+      },
       "NewDebtor": {
         "type": "object",
         "required": [
