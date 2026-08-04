@@ -2524,13 +2524,19 @@
             "type": "string",
             "description": "The language used during the call (e.g., 'english', 'spanish'). May be null if not provided.",
             "nullable": true
+          },
+          "rpc": {
+            "type": "boolean",
+            "description": "Whether right-party contact (identity verification) was completed during the call. Always null for integrations that do not report verification.",
+            "nullable": true
           }
         },
         "example": {
           "action": "general_transfer",
           "tcn_cid": "12345",
           "timestamp": "2024-01-15T10:30:00.000Z",
-          "language": "english"
+          "language": "english",
+          "rpc": true
         }
       },
       "TCNCallOutcomeNotFound": {
