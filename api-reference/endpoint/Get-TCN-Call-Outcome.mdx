@@ -30,6 +30,16 @@ Example values include:
 - `"english"`
 - `"spanish"`
 
+### rpc
+
+The `rpc` field indicates whether right-party contact (identity verification) was completed during the call:
+
+- `true` - The right party was verified during the call
+- `false` - Verification was attempted but not completed
+- `null` - The integration does not report verification
+
+This field supports compliance workflows (e.g., call-frequency rules) that depend on whether the right party was reached.
+
 ## Usage Pattern
 
 This endpoint should be pinged every 1-2 seconds after a call ends, with a timeout of 2-3 minutes. The endpoint will return:
