@@ -1,23 +1,21 @@
 ---
 title: 'Inbound Reply Webhook'
-description: 'Receive every reply a consumer sends back to a text you sent, delivered to your endpoint in real time and signed so you can verify it came from CollectWise.'
+description: 'Details about the Inbound Reply webhook, which delivers every reply a consumer sends back to a text you sent.'
 ---
 
 ## Inbound Reply Webhook
 
-When a consumer replies to a text you sent through the [Texting endpoints](/api-reference/Texting-Overview), we deliver that reply to an HTTPS endpoint you own. Every reply is delivered — we do not filter, classify, or auto-answer them on your behalf.
+When a consumer replies to a text you sent through the [Texting endpoints](/api-reference/Texting-Overview), we deliver that reply to an HTTPS endpoint you own. Every reply is delivered — we do not filter or auto-answer them on your behalf. You only receive your own organization's replies.
 
-Send us your endpoint URL and we will configure it for your organization, along with a signing secret. You only ever receive your own organization's replies.
+Send us your endpoint URL and we will configure it, along with a signing secret.
 
 <Note>
-  If no endpoint is configured, replies are still recorded — you can read them at any time with [List Text Messages](/api-reference/endpoint/Text-Messages). The webhook is a convenience, not the only way to get replies.
+  If no endpoint is configured, replies are still recorded — read them at any time with [List Text Messages](/api-reference/endpoint/Text-Messages).
 </Note>
 
-## Request we send
+## Webhook Notification
 
 ```
-POST https://your-host.example/hooks/collectwise-sms
-Content-Type: application/json
 X-CollectWise-Event: text.inbound
 X-CollectWise-Timestamp: 1755432000
 X-CollectWise-Message-Id: 4d1a0b7c-9e2f-4c31-8a77-2b6f0d1e5c44
@@ -44,59 +42,35 @@ X-CollectWise-Signature: sha256=<hex hmac>
 
 | Field | Description |
 | --- | --- |
-| `messageId` | Id of **this reply**. Use it as your de-duplication key — delivery is at-least-once. |
-| `inReplyTo` | The `messageId` you received from [Send a Text](/api-reference/endpoint/Text-Send) that this reply answers. `null` when the reply cannot be attributed to one of your sends — a consumer texting in cold, or a conversation that has already rolled over. |
-| `debtorId` | The reference you sent on that message. `"UNKNOWN"` if the number has no send on record. |
-| `conversationId` | Thread id. Messages to and from a number group into one conversation, which rolls over after 7 days idle — the same point at which `inReplyTo` starts returning `null`. |
+| `messageId` | Id of this reply. Use it as your de-duplication key — delivery is at-least-once. |
+| `inReplyTo` | The `messageId` of the send this reply answers. `null` when it cannot be attributed to one of your sends — a consumer texting in cold, or a conversation idle more than 7 days. |
+| `debtorId` | The reference you sent on that message, or `"UNKNOWN"` if the number has no send on record. |
+| `conversationId` | Thread id. Messages to and from a number group into one conversation. |
 | `from` | The consumer's number, in E.164 format. |
 | `to` | The number or short code they replied to. |
 | `messageType` | `sms` or `mms`. `mediaUrls` is non-null only for MMS. |
-| `receivedAt` | When we received the reply. |
 
 ## Verifying the signature
 
-When a signing secret is configured, we sign every delivery so you can confirm it came from us and was not altered in transit. The signature is:
-
-```
-sha256=HMAC_SHA256(secret, "{timestamp}.{raw body}")
-```
-
-Use the secret as raw UTF-8 bytes, render the digest as **lower-case hex**, and compute it over the **raw request body bytes, before JSON parsing** — re-serializing the parsed body will change the bytes and the signature will not match. Compare the whole `sha256=...` string in constant time.
+Each delivery is signed as `sha256=HMAC_SHA256(secret, "{timestamp}.{raw body}")`, using the secret as raw UTF-8 bytes and lower-case hex for the digest. Compute it over the **raw request body before JSON parsing** — re-serializing the parsed body changes the bytes and the signature will not match.
 
 ```javascript
-const crypto = require("crypto");
-
-function verify(rawBody, headers, secret) {
-  const timestamp = headers["x-collectwise-timestamp"];
-  const expected =
-    "sha256=" +
-    crypto
-      .createHmac("sha256", secret)
-      .update(`${timestamp}.${rawBody}`)
-      .digest("hex");
-
-  const received = headers["x-collectwise-signature"] || "";
-  return (
-    expected.length === received.length &&
-    crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received))
-  );
-}
+const expected =
+  "sha256=" +
+  crypto
+    .createHmac("sha256", secret)
+    .update(`${headers["x-collectwise-timestamp"]}.${rawBody}`)
+    .digest("hex");
 ```
 
-You can check your implementation against this vector — secret `whsec`, timestamp `1755432000`, body `{"a":1}`:
+Check your implementation against this vector — secret `whsec`, timestamp `1755432000`, body `{"a":1}`:
 
 ```
 sha256=0fe730fb2fb798f23d9b724ebb086d14d50ff27a15eb4bbb6f5cf70b334e4b59
 ```
 
-If no signing secret is configured for your organization, we deliver unsigned and omit the `X-CollectWise-Signature` header.
+Without a configured secret we deliver unsigned and omit the header.
 
-## Responding and retries
+## Responding
 
-Respond `2xx` as soon as you have accepted the event — do your processing after you have answered.
-
-- A non-2xx response or a network error is retried up to **3 times** with a short backoff. Every attempt lands within a few seconds and reuses the original timestamp and signature, so a retry verifies with the same computation as the first attempt.
-- A `4xx` response is treated as permanent and is **not** retried.
-- Delivery is **at-least-once**. The same `messageId` can arrive more than once, so de-duplicate on it rather than assuming exactly-one delivery.
-
-If your endpoint is down for a period, use [List Text Messages](/api-reference/endpoint/Text-Messages) with the `since` parameter to backfill everything you missed.
+Respond `2xx`. A non-2xx or a network error is retried up to 3 times with a short backoff, reusing the original timestamp and signature; a `4xx` is treated as permanent and not retried. If your endpoint is down for a period, use [List Text Messages](/api-reference/endpoint/Text-Messages) with `since` to backfill what you missed.
