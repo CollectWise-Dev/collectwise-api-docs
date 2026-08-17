@@ -1,20 +1,21 @@
 ---
 title: 'Inbound Reply Webhook'
-description: 'Details about the Inbound Reply webhook, which delivers every reply a consumer sends back to a text you sent.'
+description: 'Details about the Inbound Reply webhook, which delivers the text of a consumer reply to a message you sent.'
 ---
 
 ## Inbound Reply Webhook
 
-When a consumer replies to a text you sent through the [Texting endpoints](/api-reference/Texting-Overview), we deliver that reply to an HTTPS endpoint you own. Every reply is delivered — we do not filter or auto-answer them on your behalf. You only receive your own organization's replies.
+The Inbound Reply webhook delivers the consumer's reply whenever someone texts back a message you sent through the [Texting endpoints](/api-reference/Texting-Overview). Unlike the [Communications webhook](/api-reference/Communications-Webhook), which reports that an interaction took place, this one carries the message text itself and identifies which of your sends it answers. You receive only your own organization's replies.
 
-Send us your endpoint URL and we will configure it, along with a signing secret.
-
-<Note>
-  If no endpoint is configured, replies are still recorded — read them at any time with [List Text Messages](/api-reference/endpoint/Text-Messages).
-</Note>
+If no endpoint is configured, replies are still recorded and can be read with [List Text Messages](/api-reference/endpoint/Text-Messages).
 
 ## Webhook Notification
 
+The webhook sends the reply body along with the id of the message being answered. Each delivery is signed, and the same reply may be delivered more than once, so use `messageId` to de-duplicate.
+
+*Note: `inReplyTo` is null when the reply cannot be matched to one of your sends, such as a consumer texting in cold or a conversation idle more than 7 days. `debtorId` is "UNKNOWN" if the number has no send on record.*
+
+**Headers:**
 ```
 X-CollectWise-Event: text.inbound
 X-CollectWise-Timestamp: 1755432000
@@ -22,6 +23,7 @@ X-CollectWise-Message-Id: 4d1a0b7c-9e2f-4c31-8a77-2b6f0d1e5c44
 X-CollectWise-Signature: sha256=<hex hmac>
 ```
 
+**Example Payload:**
 ```json
 {
   "event": "text.inbound",
@@ -40,19 +42,11 @@ X-CollectWise-Signature: sha256=<hex hmac>
 }
 ```
 
-| Field | Description |
-| --- | --- |
-| `messageId` | Id of this reply. Use it as your de-duplication key — delivery is at-least-once. |
-| `inReplyTo` | The `messageId` of the send this reply answers. `null` when it cannot be attributed to one of your sends — a consumer texting in cold, or a conversation idle more than 7 days. |
-| `debtorId` | The reference you sent on that message, or `"UNKNOWN"` if the number has no send on record. |
-| `conversationId` | Thread id. Messages to and from a number group into one conversation. |
-| `from` | The consumer's number, in E.164 format. |
-| `to` | The number or short code they replied to. |
-| `messageType` | `sms` or `mms`. `mediaUrls` is non-null only for MMS. |
+`messageId` is the id of the reply. `inReplyTo` is the `messageId` returned to you by [Send a Text](/api-reference/endpoint/Text-Send). `messageType` is `sms` or `mms`, and `mediaUrls` is only populated for MMS.
 
-## Verifying the signature
+## Verifying the Signature
 
-Each delivery is signed as `sha256=HMAC_SHA256(secret, "{timestamp}.{raw body}")`, using the secret as raw UTF-8 bytes and lower-case hex for the digest. Compute it over the **raw request body before JSON parsing** — re-serializing the parsed body changes the bytes and the signature will not match.
+Each delivery is signed as `sha256=HMAC_SHA256(secret, "{timestamp}.{raw body}")`, using the secret as raw UTF-8 bytes and lower-case hex for the digest. Compute it over the raw request body before JSON parsing — re-serializing the parsed body changes the bytes and the signature will not match.
 
 ```javascript
 const expected =
@@ -63,14 +57,16 @@ const expected =
     .digest("hex");
 ```
 
-Check your implementation against this vector — secret `whsec`, timestamp `1755432000`, body `{"a":1}`:
+To check your implementation, the secret `whsec` with timestamp `1755432000` and body `{"a":1}` produces:
 
 ```
 sha256=0fe730fb2fb798f23d9b724ebb086d14d50ff27a15eb4bbb6f5cf70b334e4b59
 ```
 
-Without a configured secret we deliver unsigned and omit the header.
+*Note: without a configured signing secret we deliver unsigned and omit the signature header.*
 
 ## Responding
 
-Respond `2xx`. A non-2xx or a network error is retried up to 3 times with a short backoff, reusing the original timestamp and signature; a `4xx` is treated as permanent and not retried. If your endpoint is down for a period, use [List Text Messages](/api-reference/endpoint/Text-Messages) with `since` to backfill what you missed.
+Respond `2xx`. A non-2xx response or a network error is retried up to 3 times with a short backoff, reusing the original timestamp and signature; a `4xx` is treated as permanent and not retried. To recover replies missed while your endpoint was down, use [List Text Messages](/api-reference/endpoint/Text-Messages) with the `since` parameter.
+
+Send us your endpoint and signing secret to configure this webhook for your integration.
