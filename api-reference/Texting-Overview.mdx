@@ -1,11 +1,11 @@
 ---
 title: "Texting Overview"
-description: "Send a single, ad-hoc templated SMS to a phone number, preview how many segments it will use, and check delivery status."
+description: "Send a single, ad-hoc SMS to a phone number from a template or as free-form text, preview how many segments it will use, check delivery status, and receive the consumer's replies."
 ---
 
 ## How it works
 
-The Texting endpoints let you send one-off SMS messages built from templates we configure for your account. Your account is identified by your `collectwise_key` API key, sent in the header on every request.
+The Texting endpoints let you send one-off SMS messages, either from templates we configure for your account or as free-form text you write yourself. Your account is identified by your `collectwise_key` API key, sent in the header on every request.
 
 <Note>
   Texting must be enabled for your organization before these endpoints will respond. If you receive a `403` on every call, contact us to have your organization enabled.
@@ -21,12 +21,25 @@ A typical integration is:
     Call [Calculate SMS Segments](/api-reference/endpoint/Text-Segments) to see how many SMS segments a message or rendered template will use, before sending.
   </Step>
   <Step title="Send">
-    Call [Send a Text](/api-reference/endpoint/Text-Send) with the `templateId`, `destination`, and a `variables` object filling in every placeholder. A `200` means the message was accepted and queued, and returns a `messageId`.
+    Call [Send a Text](/api-reference/endpoint/Text-Send) with a `destination`, a `debtorId`, and either a `templateId` plus a `variables` object filling in every placeholder, or a free-form `message`. A `200` means the message was accepted and queued, and returns a `messageId`.
   </Step>
   <Step title="Check status">
     Poll [Get Text Status](/api-reference/endpoint/Text-Status) with the `messageId`. Delivery reports arrive asynchronously, so check after a short delay.
   </Step>
+  <Step title="Receive replies">
+    Register the [Communications webhook](/api-reference/Communications-Webhook) to have every reply pushed to you in real time, or poll [List Text Messages](/api-reference/endpoint/Text-Messages) for the thread.
+  </Step>
 </Steps>
+
+## Free-form texts
+
+Instead of a `templateId` and `variables`, you can send a free-form `message` of up to 1600 characters, delivered exactly as written. Send exactly one of the two. A request with both, or with neither, is rejected with `400`.
+
+Free-form is enabled per organization and off by default; without it, `message` returns `403 Free-form texts are not enabled for this organization`.
+
+<Warning>
+  Free-form text bypasses the carrier's pre-approved template copy, so compliance wording is entirely your responsibility. Include your opt-out language (for example, "Reply STOP to opt out") and any agency identification your messages require. We do not append anything to a free-form message.
+</Warning>
 
 ## Templates and variables
 
@@ -52,9 +65,13 @@ A message moves through `Queued` → `Sent` → `Delivered`, or ends in `Rejecte
 | `NON_FATAL` | Transient (e.g. absent subscriber, temporary carrier failure). `retryRecommended` is `true`. |
 | `null` | The carrier reason was not recognized. |
 
+## Receiving replies
+
+Consumer replies arrive through the [Communications webhook](/api-reference/Communications-Webhook), which carries the reply text and the id of the message being answered. You can also read the thread on demand with [List Text Messages](/api-reference/endpoint/Text-Messages).
+
 ## Rate limits
 
 - **Send**: 10 requests per minute per organization.
-- **Reads** (templates, segments, status): 60 requests per minute per organization.
+- **Reads** (templates, segments, status, messages): 60 requests per minute per organization.
 
 Exceeding a limit returns `429` with a `Retry-After` header.
