@@ -5,7 +5,7 @@ description: "Send a single, ad-hoc SMS to a phone number from a template or as 
 
 ## How it works
 
-The Texting endpoints let you send one-off SMS messages — either from templates we configure for your account, or as free-form text you write yourself. Your account is identified by your `collectwise_key` API key, sent in the header on every request.
+The Texting endpoints let you send one-off SMS messages, either from templates we configure for your account or as free-form text you write yourself. Your account is identified by your `collectwise_key` API key, sent in the header on every request.
 
 <Note>
   Texting must be enabled for your organization before these endpoints will respond. If you receive a `403` on every call, contact us to have your organization enabled.
@@ -33,12 +33,12 @@ A typical integration is:
 
 ## Free-form texts
 
-Instead of a `templateId` and `variables`, you can send a free-form `message` of up to 1600 characters, delivered exactly as written. Send exactly one of the two — a request with both, or with neither, is rejected with `400`.
+Instead of a `templateId` and `variables`, you can send a free-form `message` of up to 1600 characters, delivered exactly as written. Send exactly one of the two. A request with both, or with neither, is rejected with `400`.
 
 Free-form is enabled per organization and off by default; without it, `message` returns `403 Free-form texts are not enabled for this organization`.
 
 <Warning>
-  Free-form text bypasses the carrier's pre-approved template copy, so compliance wording is entirely your responsibility. Include your opt-out language (for example, "Reply STOP to opt out") and any agency identification your messages require — we do not append anything to a free-form message.
+  Free-form text bypasses the carrier's pre-approved template copy, so compliance wording is entirely your responsibility. Include your opt-out language (for example, "Reply STOP to opt out") and any agency identification your messages require. We do not append anything to a free-form message.
 </Warning>
 
 ## Templates and variables

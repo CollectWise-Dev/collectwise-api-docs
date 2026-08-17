@@ -39,7 +39,7 @@ The webhook sends the reply text, the number it came from, and the id of the mes
 
 ## Delivery
 
-Respond `2xx`. A failed delivery is retried up to 3 times, so the same reply may arrive more than once — use `messageId` to de-duplicate. To recover replies missed while your endpoint was down, use [List Text Messages](/api-reference/endpoint/Text-Messages) with the `since` parameter.
+Respond `2xx`. A failed delivery is retried up to 3 times, so the same reply may arrive more than once. Use `messageId` to de-duplicate. To recover replies missed while your endpoint was down, use [List Text Messages](/api-reference/endpoint/Text-Messages) with the `since` parameter.
 
 Each request is signed with an `X-CollectWise-Signature` header so you can confirm it came from us. We provide the signing secret and verification details when we set up your endpoint.
 

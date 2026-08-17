@@ -1569,7 +1569,7 @@
     "/text/send": {
       "post": {
         "summary": "Send a one-time text",
-        "description": "Sends one SMS to one phone number, either from a pre-approved template (`templateId` + `variables`) or as free-form text (`message`). Send exactly one of `templateId` or `message` — a body with both, or with neither, is a 400. A 200 means the message was accepted and queued, not yet delivered — use the returned `messageId` with the status endpoint. Sandbox API keys are rejected.",
+        "description": "Sends one SMS to one phone number, either from a pre-approved template (`templateId` + `variables`) or as free-form text (`message`). Send exactly one of `templateId` or `message`; a body with both, or with neither, is a 400. A 200 means the message was accepted and queued, not yet delivered, so use the returned `messageId` with the status endpoint. Sandbox API keys are rejected.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1587,7 +1587,7 @@
                   },
                   "templateId": {
                     "type": "integer",
-                    "description": "The template to send. Must belong to your organization's account. Mutually exclusive with `message` — send exactly one of the two."
+                    "description": "The template to send. Must belong to your organization's account. Mutually exclusive with `message`; send exactly one of the two."
                   },
                   "variables": {
                     "type": "object",
@@ -1632,7 +1632,7 @@
                   "summary": "Free-form send",
                   "value": {
                     "destination": "3313048434",
-                    "message": "Jane, this is Acme Recovery Group, a debt collector. Your balance is $430.10 — pay at https://pay.collectwise.com/acme. Reply STOP to opt out.",
+                    "message": "Jane, this is Acme Recovery Group, a debt collector. Your balance is $430.10. Pay at https://pay.collectwise.com/acme. Reply STOP to opt out.",
                     "debtorId": "your-reference-number"
                   }
                 }
@@ -1761,7 +1761,7 @@
     "/text/messages": {
       "get": {
         "summary": "List text messages",
-        "description": "Returns the message thread for one of your recipients — your outbound sends and the consumer's inbound replies, newest first. Use this to poll for replies if you do not want to run a webhook endpoint, or to backfill replies after a webhook outage. Results are always scoped to your organization. Provide at least one of `messageId`, `debtorId`, `destination`, or `since`.",
+        "description": "Returns the message thread for one of your recipients: your outbound sends and the consumer's inbound replies, newest first. Use this to poll for replies if you do not want to run a webhook endpoint, or to backfill replies after a webhook outage. Results are always scoped to your organization. Provide at least one of `messageId`, `debtorId`, `destination`, or `since`.",
         "parameters": [
           {
             "name": "messageId",
@@ -1810,7 +1810,7 @@
               "type": "string",
               "format": "date-time"
             },
-            "description": "ISO 8601 timestamp. Returns only messages created at or after it. Valid on its own — use it to backfill everything your organization received after a webhook outage."
+            "description": "ISO 8601 timestamp. Returns only messages created at or after it. Valid on its own, so you can use it to backfill everything your organization received after a webhook outage."
           }
         ],
         "responses": {
