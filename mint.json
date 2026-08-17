@@ -64,7 +64,8 @@
       "pages": [
         "api-reference/Webhooks-Overview",
         "api-reference/Payment-Received",
-        "api-reference/Communications-Webhook"
+        "api-reference/Communications-Webhook",
+        "api-reference/Inbound-Reply-Webhook"
       ]
     },
     {
@@ -91,7 +92,8 @@
         "api-reference/endpoint/Text-Get-Template",
         "api-reference/endpoint/Text-Segments",
         "api-reference/endpoint/Text-Send",
-        "api-reference/endpoint/Text-Status"
+        "api-reference/endpoint/Text-Status",
+        "api-reference/endpoint/Text-Messages"
       ]
     },
     {

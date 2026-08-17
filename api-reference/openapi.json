@@ -1569,7 +1569,7 @@
     "/text/send": {
       "post": {
         "summary": "Send a one-time text",
-        "description": "Renders an SMS template with the supplied variables and sends it to one phone number. A 200 means the message was accepted and queued, not yet delivered — use the returned `messageId` with the status endpoint. Sandbox API keys are rejected.",
+        "description": "Sends one SMS to one phone number, either from a pre-approved template (`templateId` + `variables`) or as free-form text (`message`). Send exactly one of `templateId` or `message` — a body with both, or with neither, is a 400. A 200 means the message was accepted and queued, not yet delivered — use the returned `messageId` with the status endpoint. Sandbox API keys are rejected.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1578,8 +1578,6 @@
                 "type": "object",
                 "required": [
                   "destination",
-                  "templateId",
-                  "variables",
                   "debtorId"
                 ],
                 "properties": {
@@ -1589,32 +1587,55 @@
                   },
                   "templateId": {
                     "type": "integer",
-                    "description": "The template to send. Must belong to your organization's account."
+                    "description": "The template to send. Must belong to your organization's account. Mutually exclusive with `message` — send exactly one of the two."
                   },
                   "variables": {
                     "type": "object",
                     "additionalProperties": {
                       "type": "string"
                     },
-                    "description": "Values substituted into the template's `{placeholder}` tokens. Use `{}` if the template has none. If any placeholder is left unresolved, the request fails with 400 rather than texting a literal `{token}`."
+                    "description": "Values substituted into the template's `{placeholder}` tokens. Required with `templateId`; use `{}` if the template has none. If any placeholder is left unresolved, the request fails with 400 rather than texting a literal `{token}`. Rejected if sent alongside `message`."
+                  },
+                  "message": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1600,
+                    "description": "Free-form message body, sent verbatim with no template and no placeholder substitution. Mutually exclusive with `templateId`. Requires free-form texting to be enabled for your organization, otherwise 403."
                   },
                   "debtorId": {
                     "type": "string",
                     "description": "Your reference for this recipient (e.g. your account or reference number). Forwarded as-is; replies and the message record are tracked against it."
+                  },
+                  "campaignId": {
+                    "type": "string",
+                    "description": "Optional. Overrides your organization's default campaign for this send."
                   }
                 }
               },
-              "example": {
-                "destination": "3313048434",
-                "templateId": 100,
-                "variables": {
-                  "Consumer Name": "Jane Doe",
-                  "Company Name": "Acme Recovery Group",
-                  "Website Payment": "https://pay.collectwise.com/acme",
-                  "Account Number": "ACME-0001",
-                  "Phone#": "800-555-0100"
+              "examples": {
+                "template": {
+                  "summary": "Template send",
+                  "value": {
+                    "destination": "3313048434",
+                    "templateId": 100,
+                    "variables": {
+                      "Consumer Name": "Jane Doe",
+                      "Company Name": "Acme Recovery Group",
+                      "Website Payment": "https://pay.collectwise.com/acme",
+                      "Account Number": "ACME-0001",
+                      "Phone#": "800-555-0100"
+                    },
+                    "debtorId": "your-reference-number"
+                  }
                 },
-                "debtorId": "your-reference-number"
+                "freeForm": {
+                  "summary": "Free-form send",
+                  "value": {
+                    "destination": "3313048434",
+                    "message": "Jane, this is Acme Recovery Group, a debt collector. Your balance is $430.10 — pay at https://pay.collectwise.com/acme. Reply STOP to opt out.",
+                    "debtorId": "your-reference-number"
+                  }
+                }
               }
             }
           }
@@ -1657,7 +1678,7 @@
             }
           },
           "400": {
-            "description": "Invalid body: bad phone number, missing or non-integer `templateId`, missing `debtorId`, bad `variables`, or unresolved template placeholders.",
+            "description": "Invalid body: bad phone number, missing or non-integer `templateId`, missing `debtorId`, bad `variables`, unresolved template placeholders, both or neither of `templateId` and `message`, an empty or over-length `message`, `variables` sent alongside `message`, or no campaign configured for your organization.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1670,14 +1691,14 @@
             }
           },
           "403": {
-            "description": "Texting not enabled for your organization, the template is not in your account, or a sandbox key was used.",
+            "description": "Texting not enabled for your organization, free-form texting not enabled for your organization, the template is not in your account, or a sandbox key was used.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TextError"
                 },
                 "example": {
-                  "error": "Template is not available for your account"
+                  "error": "Free-form texts are not enabled for this organization"
                 }
               }
             }
@@ -1717,6 +1738,188 @@
                 },
                 "example": {
                   "error": "Failed to send message"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Internal server error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/text/messages": {
+      "get": {
+        "summary": "List text messages",
+        "description": "Returns the message thread for one of your recipients — your outbound sends and the consumer's inbound replies, newest first. Use this to poll for replies if you do not want to run a webhook endpoint, or to backfill replies after a webhook outage. Results are always scoped to your organization. Provide at least one of `messageId`, `debtorId`, `destination`, or `since`.",
+        "parameters": [
+          {
+            "name": "messageId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "A `messageId` returned by the send endpoint. Returns that message's whole thread, in both directions. 404 if the id does not belong to your organization."
+          },
+          {
+            "name": "debtorId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Your reference for the recipient, as sent on `debtorId`."
+          },
+          {
+            "name": "destination",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Recipient phone number, in any of the formats the send endpoint accepts."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            },
+            "description": "Maximum number of messages to return."
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "ISO 8601 timestamp. Returns only messages created at or after it. Valid on its own — use it to backfill everything your organization received after a webhook outage."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching messages, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "count",
+                    "messages"
+                  ],
+                  "properties": {
+                    "count": {
+                      "type": "integer"
+                    },
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TextMessage"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "count": 2,
+                  "messages": [
+                    {
+                      "messageId": "4d1a0b7c-9e2f-4c31-8a77-2b6f0d1e5c44",
+                      "direction": "inbound",
+                      "status": "Delivered",
+                      "message": "when is my payment due",
+                      "debtorId": "your-reference-number",
+                      "destination": "+13313048434",
+                      "conversationId": "conv_087b83bb525d4fceaaa01a4234b6b012",
+                      "templateId": null,
+                      "messageType": "sms",
+                      "mediaUrls": null,
+                      "createdAt": "2026-08-17T12:00:00.000Z",
+                      "updatedAt": null
+                    },
+                    {
+                      "messageId": "1b1f0a9e-6f4e-4f4b-9a2e-1f2d3c4b5a69",
+                      "direction": "outbound",
+                      "status": "Delivered",
+                      "message": "Jane, this is Acme Recovery Group, a debt collector. Your balance is $430.10. Reply STOP to opt out.",
+                      "debtorId": "your-reference-number",
+                      "destination": "+13313048434",
+                      "conversationId": "conv_087b83bb525d4fceaaa01a4234b6b012",
+                      "templateId": 100,
+                      "messageType": "sms",
+                      "mediaUrls": null,
+                      "createdAt": "2026-08-17T11:58:02.000Z",
+                      "updatedAt": "2026-08-17T11:58:07.000Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No filter supplied, an invalid `destination`, a `limit` outside 1–200, or a `since` that is not an ISO 8601 timestamp.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Provide messageId, debtorId, destination or since"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Texting not enabled for your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Texting is not enabled for this organization"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The supplied `messageId` is unknown or does not belong to your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Message not found"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (60 reads/min per organization).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextError"
+                },
+                "example": {
+                  "error": "Too many requests"
                 }
               }
             }
@@ -2803,6 +3006,77 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "TextMessage": {
+        "type": "object",
+        "required": [
+          "messageId",
+          "direction"
+        ],
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "description": "For an outbound message, the id returned by the send endpoint. For an inbound reply, the id of that reply."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "outbound",
+              "inbound"
+            ],
+            "description": "`outbound` for messages you sent, `inbound` for the consumer's replies."
+          },
+          "status": {
+            "type": "string",
+            "description": "Carrier status. Inbound replies are recorded as Delivered."
+          },
+          "message": {
+            "type": "string",
+            "description": "The message body as sent or received."
+          },
+          "debtorId": {
+            "type": "string",
+            "description": "Your reference for the recipient."
+          },
+          "destination": {
+            "type": "string",
+            "description": "The consumer's phone number, in E.164 format."
+          },
+          "conversationId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Thread id. Messages to and from a number group into one conversation, which rolls over after 7 days idle."
+          },
+          "templateId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "The template this message was rendered from. Null for free-form sends and for inbound replies."
+          },
+          "messageType": {
+            "type": "string",
+            "enum": [
+              "sms",
+              "mms"
+            ]
+          },
+          "mediaUrls": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            },
+            "description": "Attachment URLs. Non-null only for MMS."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
