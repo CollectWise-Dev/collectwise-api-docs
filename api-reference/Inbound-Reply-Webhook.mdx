@@ -11,19 +11,12 @@ If no endpoint is configured, replies are still recorded and can be read with [L
 
 ## Webhook Notification
 
-The webhook sends the reply body along with the id of the message being answered. Each delivery is signed, and the same reply may be delivered more than once, so use `messageId` to de-duplicate.
+The webhook sends the reply text, the number it came from, and the id of the message being answered.
 
 *Note: `inReplyTo` is null when the reply cannot be matched to one of your sends, such as a consumer texting in cold or a conversation idle more than 7 days. `debtorId` is "UNKNOWN" if the number has no send on record.*
 
-**Headers:**
-```
-X-CollectWise-Event: text.inbound
-X-CollectWise-Timestamp: 1755432000
-X-CollectWise-Message-Id: 4d1a0b7c-9e2f-4c31-8a77-2b6f0d1e5c44
-X-CollectWise-Signature: sha256=<hex hmac>
-```
+## Example Payload
 
-**Example Payload:**
 ```json
 {
   "event": "text.inbound",
@@ -42,31 +35,12 @@ X-CollectWise-Signature: sha256=<hex hmac>
 }
 ```
 
-`messageId` is the id of the reply. `inReplyTo` is the `messageId` returned to you by [Send a Text](/api-reference/endpoint/Text-Send). `messageType` is `sms` or `mms`, and `mediaUrls` is only populated for MMS.
+`message` is the reply text and `from` is the consumer's number. `messageId` identifies this reply, and `inReplyTo` is the `messageId` that [Send a Text](/api-reference/endpoint/Text-Send) returned for the message being answered. `messageType` is `sms` or `mms`, and `mediaUrls` is only populated for MMS.
 
-## Verifying the Signature
+## Delivery
 
-Each delivery is signed as `sha256=HMAC_SHA256(secret, "{timestamp}.{raw body}")`, using the secret as raw UTF-8 bytes and lower-case hex for the digest. Compute it over the raw request body before JSON parsing — re-serializing the parsed body changes the bytes and the signature will not match.
+Respond `2xx`. A failed delivery is retried up to 3 times, so the same reply may arrive more than once — use `messageId` to de-duplicate. To recover replies missed while your endpoint was down, use [List Text Messages](/api-reference/endpoint/Text-Messages) with the `since` parameter.
 
-```javascript
-const expected =
-  "sha256=" +
-  crypto
-    .createHmac("sha256", secret)
-    .update(`${headers["x-collectwise-timestamp"]}.${rawBody}`)
-    .digest("hex");
-```
+Each request is signed with an `X-CollectWise-Signature` header so you can confirm it came from us. We provide the signing secret and verification details when we set up your endpoint.
 
-To check your implementation, the secret `whsec` with timestamp `1755432000` and body `{"a":1}` produces:
-
-```
-sha256=0fe730fb2fb798f23d9b724ebb086d14d50ff27a15eb4bbb6f5cf70b334e4b59
-```
-
-*Note: without a configured signing secret we deliver unsigned and omit the signature header.*
-
-## Responding
-
-Respond `2xx`. A non-2xx response or a network error is retried up to 3 times with a short backoff, reusing the original timestamp and signature; a `4xx` is treated as permanent and not retried. To recover replies missed while your endpoint was down, use [List Text Messages](/api-reference/endpoint/Text-Messages) with the `since` parameter.
-
-Send us your endpoint and signing secret to configure this webhook for your integration.
+Send us your endpoint to configure this webhook for your integration.
