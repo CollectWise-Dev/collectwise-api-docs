@@ -64,8 +64,7 @@
       "pages": [
         "api-reference/Webhooks-Overview",
         "api-reference/Payment-Received",
-        "api-reference/Communications-Webhook",
-        "api-reference/Inbound-Reply-Webhook"
+        "api-reference/Communications-Webhook"
       ]
     },
     {

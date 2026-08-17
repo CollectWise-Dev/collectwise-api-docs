@@ -27,7 +27,7 @@ A typical integration is:
     Poll [Get Text Status](/api-reference/endpoint/Text-Status) with the `messageId`. Delivery reports arrive asynchronously, so check after a short delay.
   </Step>
   <Step title="Receive replies">
-    Register an [Inbound Reply Webhook](/api-reference/Inbound-Reply-Webhook) to have every reply pushed to you in real time, or poll [List Text Messages](/api-reference/endpoint/Text-Messages) for the thread.
+    Register the [Communications webhook](/api-reference/Communications-Webhook) to have every reply pushed to you in real time, or poll [List Text Messages](/api-reference/endpoint/Text-Messages) for the thread.
   </Step>
 </Steps>
 
@@ -67,7 +67,7 @@ A message moves through `Queued` → `Sent` → `Delivered`, or ends in `Rejecte
 
 ## Receiving replies
 
-Register an [Inbound Reply Webhook](/api-reference/Inbound-Reply-Webhook) to have every reply pushed to you as it arrives, or read the thread on demand with [List Text Messages](/api-reference/endpoint/Text-Messages).
+Consumer replies arrive through the [Communications webhook](/api-reference/Communications-Webhook), which carries the reply text and the id of the message being answered. You can also read the thread on demand with [List Text Messages](/api-reference/endpoint/Text-Messages).
 
 ## Rate limits
 
