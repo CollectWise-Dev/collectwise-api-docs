@@ -5,7 +5,7 @@ description: 'API keys, signed requests and optional network restrictions'
 
 {/* Publish only with the approved API security rollout. This branch does not authorize deployment. */}
 
-Send your API key in `collectwise_key` on authenticated routes. Keys must be active and unexpired, and their organization must be active. Live and sandbox behavior remains attached to the key. Manage keys and optional controls in the dashboard's API Keys page as an authorized active-organization administrator. Sensitive changes require recent identity verification.
+Send your API key in `collectwise_key` on authenticated routes. Keys must be active and unexpired, and their organization must be active. Live and sandbox behavior remains attached to the key. Manage keys and optional controls in the dashboard's API Keys page as an organization member with access to that page. Sensitive changes require recent identity verification.
 
 ## Signed requests (CW1)
 
@@ -69,7 +69,7 @@ Provision a signing secret, configure the application, verify a signed diagnosti
 
 Rotation requires an explicit choice: no grace, 24 hours or 7 days. At most one current and one unexpired previous secret are eligible. You cannot rotate again or provision a replacement while a previous secret remains in grace: wait or explicitly revoke it. Revoking the current secret does not silently revoke a separate previous secret. Expired/revoked versions cannot be used even if decryption was cached. After reveal, refresh/history can show metadata but cannot reveal the secret again. Do not automatically replay a management mutation after an uncertain response.
 
-Dashboard access is separate from the API data-plane allowlist, allowing an authorized admin to correct a lockout. Contact support if dashboard recovery is unavailable.
+Dashboard access is separate from the API data-plane allowlist, allowing an authorized organization member to correct a lockout. Contact support if dashboard recovery is unavailable.
 
 ## Errors and rate limits
 
