@@ -1681,19 +1681,6 @@
                 }
               }
             }
-          },
-          "429": {
-            "description": "Rate limit exceeded. See the Retry-After response header.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TextError"
-                },
-                "example": {
-                  "error": "Too many requests"
-                }
-              }
-            }
           }
         },
         "parameters": [
@@ -1788,19 +1775,6 @@
                 }
               }
             }
-          },
-          "429": {
-            "description": "Rate limit exceeded.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TextError"
-                },
-                "example": {
-                  "error": "Too many requests"
-                }
-              }
-            }
           }
         }
       }
@@ -1879,19 +1853,6 @@
                 },
                 "example": {
                   "error": "Provide either message or templateId"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TextError"
-                },
-                "example": {
-                  "error": "Too many requests"
                 }
               }
             }
@@ -2053,19 +2014,6 @@
                 },
                 "example": {
                   "error": "Template not found"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded (10 sends/min per organization).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TextError"
-                },
-                "example": {
-                  "error": "Too many requests"
                 }
               }
             }
@@ -2266,19 +2214,6 @@
               }
             }
           },
-          "429": {
-            "description": "Rate limit exceeded (60 reads/min per organization).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TextError"
-                },
-                "example": {
-                  "error": "Too many requests"
-                }
-              }
-            }
-          },
           "500": {
             "description": "Unexpected server error.",
             "content": {
@@ -2346,19 +2281,6 @@
                 },
                 "example": {
                   "error": "Message not found"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TextError"
-                },
-                "example": {
-                  "error": "Too many requests"
                 }
               }
             }

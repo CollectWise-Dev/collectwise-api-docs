@@ -30,7 +30,7 @@ Keep query ordering, repeated parameters, percent-encoding case and JSON whitesp
 
 The API accepts timestamps within ±300 seconds of its clock, inclusive. Synchronize your clock. Duplicate signing/authentication headers are rejected. Supported nonempty request bodies are JSON in UTF-8; compression and oversized bodies are rejected (100 KiB limit). Authentication precedes JSON parsing, after raw body capture and body-type/size checks.
 
-The Node and Python helpers below compute headers without sending a request. Pass their body Buffer/bytes unchanged to your HTTP client. Supply the API-key header separately. Prepare a fresh timestamp/signature for each new attempt.
+The [Node.js and Python examples](#signing-examples) below compute headers without sending a request. Pass their body Buffer/bytes unchanged to your HTTP client. Supply the API-key header separately. Prepare a fresh timestamp/signature for each new attempt.
 
 **Replay and retries:** a signature is reusable while its timestamp is accepted. These are not single-use requests; there is no nonce store. A timeout or lost response after a send can have an unknown outcome. Retrying can duplicate a voicemail, text or other action. Signing does not add send idempotency.
 
@@ -80,9 +80,11 @@ Dashboard access is separate from the API data-plane allowlist, allowing an auth
 
 API request allowances are managed by CollectWise. Signing and network restrictions do not configure request limits.
 
-## Node signing helper
+## Signing examples
 
-```javascript
+<CodeGroup>
+
+```javascript Node.js
 const { createHash, createHmac } = require('node:crypto');
 
 // Supply the exact encoded path/query and the same bytes you send over HTTP.
@@ -101,9 +103,7 @@ function signRequest({ secretBase64url, method, rawPath, rawQueryString = '', bo
 module.exports = { signRequest };
 ```
 
-## Python signing helper
-
-```python
+```python Python
 """Standard-library signing helper. Does not send requests or log credentials."""
 import base64
 import hashlib
@@ -129,3 +129,5 @@ def sign_request(secret_base64url, method, raw_path, raw_query_string="", body=b
     canonical = "\n".join(["CW1", timestamp, method.upper(), raw_path, raw_query_string, hashlib.sha256(body).hexdigest()])
     return {"x-cw-timestamp": timestamp, "x-cw-signature": "v1=" + hmac.new(secret, canonical.encode("utf-8"), hashlib.sha256).hexdigest()}
 ```
+
+</CodeGroup>
