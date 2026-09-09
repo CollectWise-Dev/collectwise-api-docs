@@ -5,7 +5,7 @@ description: 'API keys, signed requests and optional network restrictions'
 
 {/* Publish only with the approved API security rollout. This branch does not authorize deployment. */}
 
-Send your API key in `collectwise_key` on authenticated routes. Keys must be active and unexpired, and their organization must be active. Live and sandbox behavior remains attached to the key. Manage keys and optional controls in the dashboard's API Keys page as an organization member with access to that page. Sensitive changes require recent identity verification.
+Send your API key in `collectwise_key` on authenticated routes. Keys must be active and unexpired, and their organization must be active. Live and sandbox behavior remains attached to the key. Manage keys and optional controls in the dashboard's API Keys page as an organization member with access to that page. Creating, replacing or revoking a key uses your signed-in dashboard session. Signing-secret and organization security-policy changes require recent identity verification.
 
 ## Signed requests (CW1)
 
