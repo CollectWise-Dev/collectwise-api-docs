@@ -104,6 +104,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -205,7 +211,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ]
       },
       "get": {
         "summary": "List debtors",
@@ -219,6 +233,12 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -261,6 +281,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -298,6 +324,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "requestBody": {
@@ -356,6 +388,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -451,7 +489,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ]
       }
     },
     "/debtorStatus/{debtorId}": {
@@ -467,6 +513,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -530,7 +582,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ]
       }
     },
     "/debtorStatus/paidCreditor/{debtorId}": {
@@ -546,6 +606,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -599,7 +665,11 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["phoneNumber", "message", "callbackNumber"],
+                "required": [
+                  "phoneNumber",
+                  "message",
+                  "callbackNumber"
+                ],
                 "properties": {
                   "phoneNumber": {
                     "type": "string",
@@ -618,7 +688,10 @@
                   "voiceGender": {
                     "type": "string",
                     "description": "Gender of the voice to use for the voicemail",
-                    "enum": ["male", "female"]
+                    "enum": [
+                      "male",
+                      "female"
+                    ]
                   }
                 }
               },
@@ -668,7 +741,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ]
       }
     },
     "/clean-numbers": {
@@ -683,8 +764,18 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["overseas", "inhouse", "sms_inbound"]
+              "enum": [
+                "overseas",
+                "inhouse",
+                "sms_inbound"
+              ]
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -697,7 +788,9 @@
                 },
                 "example": {
                   "numbers": [
-                    { "phone_number": "+18667734413" }
+                    {
+                      "phone_number": "+18667734413"
+                    }
                   ],
                   "count": 1,
                   "group": "overseas"
@@ -733,7 +826,12 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["toNumber", "creditorName", "debtorName", "callbackNumber"],
+                "required": [
+                  "toNumber",
+                  "creditorName",
+                  "debtorName",
+                  "callbackNumber"
+                ],
                 "properties": {
                   "toNumber": {
                     "type": "string",
@@ -792,10 +890,14 @@
                 },
                 "oneOf": [
                   {
-                    "required": ["dob"]
+                    "required": [
+                      "dob"
+                    ]
                   },
                   {
-                    "required": ["last4SSN"]
+                    "required": [
+                      "last4SSN"
+                    ]
                   }
                 ]
               },
@@ -856,7 +958,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ]
       }
     },
     "/call/{callId}/recording": {
@@ -880,7 +990,12 @@
             "description": "Recording format",
             "schema": {
               "type": "string",
-              "enum": ["standard", "multichannel", "scrubbed", "scrubbed_multichannel"],
+              "enum": [
+                "standard",
+                "multichannel",
+                "scrubbed",
+                "scrubbed_multichannel"
+              ],
               "default": "standard"
             }
           },
@@ -903,6 +1018,12 @@
               "type": "boolean",
               "default": false
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -958,8 +1079,7 @@
           }
         }
       }
-    }
-    ,
+    },
     "/workflow/{debtorId}/pause": {
       "patch": {
         "summary": "Pause a debtor's workflow",
@@ -973,6 +1093,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -983,8 +1109,14 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "Debtor's workflow paused" },
-                    "paused": { "type": "boolean", "example": true }
+                    "message": {
+                      "type": "string",
+                      "example": "Debtor's workflow paused"
+                    },
+                    "paused": {
+                      "type": "boolean",
+                      "example": true
+                    }
                   }
                 }
               }
@@ -994,7 +1126,9 @@
             "description": "Debtor ID is required",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -1002,7 +1136,9 @@
             "description": "Invalid or missing API key",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -1010,7 +1146,9 @@
             "description": "Debtor not found or not enrolled",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -1018,7 +1156,9 @@
             "description": "Failed to pause workflow",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1038,6 +1178,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -1048,8 +1194,14 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "Debtor's workflow resumed" },
-                    "paused": { "type": "boolean", "example": false }
+                    "message": {
+                      "type": "string",
+                      "example": "Debtor's workflow resumed"
+                    },
+                    "paused": {
+                      "type": "boolean",
+                      "example": false
+                    }
                   }
                 }
               }
@@ -1059,7 +1211,9 @@
             "description": "Debtor ID is required",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -1067,7 +1221,9 @@
             "description": "Invalid or missing API key",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -1075,7 +1231,9 @@
             "description": "Debtor not found or not enrolled",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -1083,14 +1241,15 @@
             "description": "Failed to resume workflow",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
         }
       }
-    }
-    ,
+    },
     "/status/workflow/{workflowId}": {
       "get": {
         "summary": "Workflow status overview",
@@ -1101,33 +1260,100 @@
             "in": "path",
             "required": true,
             "description": "Unique identifier of the workflow",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "hours",
             "in": "query",
             "required": false,
             "description": "Lookback window in hours. Defaults to 24; clamped to [1, 8760].",
-            "schema": { "type": "integer", "minimum": 1, "maximum": 8760, "default": 24 }
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8760,
+              "default": 24
+            }
           },
           {
             "name": "date",
             "in": "query",
             "required": false,
             "description": "Specific UTC day in YYYY-MM-DD format; when provided, supersedes the hours window.",
-            "schema": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
           "200": {
             "description": "Workflow status overview returned",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           },
-          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "401": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "403": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "404": { "description": "Workflow not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "500": { "description": "Upstream/internal error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workflow not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream/internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -1141,12 +1367,34 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["workflowId", "debtorIds"],
+                "required": [
+                  "workflowId",
+                  "debtorIds"
+                ],
                 "properties": {
-                  "workflowId": { "type": "string", "description": "Workflow identifier" },
-                  "debtorIds": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-                  "hours": { "type": "integer", "minimum": 1, "maximum": 8760, "default": 24 },
-                  "limit": { "type": "integer", "minimum": 1, "maximum": 200, "default": 20 }
+                  "workflowId": {
+                    "type": "string",
+                    "description": "Workflow identifier"
+                  },
+                  "debtorIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  },
+                  "hours": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 8760,
+                    "default": 24
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 200,
+                    "default": 20
+                  }
                 }
               }
             }
@@ -1155,14 +1403,73 @@
         "responses": {
           "200": {
             "description": "Per-debtor statuses returned",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           },
-          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "401": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "403": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "404": { "description": "Workflow or one or more debtors not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "500": { "description": "Upstream/internal error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
-        }
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workflow or one or more debtors not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream/internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ]
       }
     },
     "/tcn/call-outcome/{tcn-cid}": {
@@ -1178,6 +1485,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -1256,6 +1569,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -1270,7 +1589,7 @@
             }
           },
           "400": {
-            "description": "Invalid request — missing or invalid date parameters, or billing not configured",
+            "description": "Invalid request \u2014 missing or invalid date parameters, or billing not configured",
             "content": {
               "application/json": {
                 "schema": {
@@ -1376,7 +1695,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ]
       }
     },
     "/text/templates/{templateId}": {
@@ -1392,6 +1719,12 @@
               "type": "integer"
             },
             "description": "The template's identifier."
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -1563,7 +1896,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ]
       }
     },
     "/text/send": {
@@ -1755,7 +2096,15 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ]
       }
     },
     "/text/messages": {
@@ -1811,6 +2160,12 @@
               "format": "date-time"
             },
             "description": "ISO 8601 timestamp. Returns only messages created at or after it. Valid on its own, so you can use it to backfill everything your organization received after a webhook outage."
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -1873,7 +2228,7 @@
             }
           },
           "400": {
-            "description": "No filter supplied, an invalid `destination`, a `limit` outside 1–200, or a `since` that is not an ISO 8601 timestamp.",
+            "description": "No filter supplied, an invalid `destination`, a `limit` outside 1\u2013200, or a `since` that is not an ISO 8601 timestamp.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1953,6 +2308,12 @@
               "type": "string"
             },
             "description": "The messageId returned by the send endpoint."
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
           }
         ],
         "responses": {
@@ -1998,6 +2359,166 @@
                 },
                 "example": {
                   "error": "Too many requests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/verify": {
+      "post": {
+        "summary": "Verify API security",
+        "operationId": "verifyApiSecurity",
+        "description": "Check signing and the observed source IP before enabling enforcement. A valid key is always required. If any usable current/grace signing secret exists, its valid signature is required even when enforcement is off. With signing off and no secret, signature is skipped; required signing with no secret returns 401. Failed signature never reveals IP details. No provider calls, business/settings writes or last-used updates. An authenticated IP mismatch can return 200, so inspect ipAllowlistEnabled and ipMatch.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Optional JSON object. Contents are not used; sign the exact bytes sent."
+              },
+              "example": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated diagnostics. An IP mismatch is reported here instead of denied; normal business routes still enforce it. No business/settings/last-used writes.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "example": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "signature",
+                    "signingRequired",
+                    "sourceIp",
+                    "ipAllowlistEnabled",
+                    "ipMatch"
+                  ],
+                  "properties": {
+                    "signature": {
+                      "type": "string",
+                      "enum": [
+                        "verified",
+                        "skipped"
+                      ]
+                    },
+                    "signingRequired": {
+                      "type": "boolean"
+                    },
+                    "sourceIp": {
+                      "type": "string",
+                      "description": "Trusted caller IP from API Gateway. Documentation examples use TEST-NET addresses."
+                    },
+                    "ipAllowlistEnabled": {
+                      "type": "boolean"
+                    },
+                    "ipMatch": {
+                      "type": "boolean",
+                      "description": "Whether the caller matches a saved range, independent of enforcement. False when there are no saved ranges."
+                    }
+                  }
+                },
+                "example": {
+                  "signature": "verified",
+                  "signingRequired": false,
+                  "sourceIp": "203.0.113.10",
+                  "ipAllowlistEnabled": false,
+                  "ipMatch": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized key or signature; generic error without IP details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 100 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported body content type, compression or charset.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Security dependency or trusted request metadata unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
@@ -2567,19 +3088,27 @@
             "description": "Custom workflow identifier for the debtor"
           },
           "enrollment": {
-          "type": "object",
-          "description": "Present only when customWorkflowID is provided",
-          "properties": {
-            "attempted": { "type": "boolean" },
-            "success": { "type": "boolean" },
-            "message": { "type": "string" },
-            "workflowId": { "type": "string" },
-            "agentName": {
-              "type": "string",
-              "description": "Agent name passed in the request. This is echoed back; if not provided, the service falls back internally to merchantName/email, but only the raw agentName is returned here."
+            "type": "object",
+            "description": "Present only when customWorkflowID is provided",
+            "properties": {
+              "attempted": {
+                "type": "boolean"
+              },
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "workflowId": {
+                "type": "string"
+              },
+              "agentName": {
+                "type": "string",
+                "description": "Agent name passed in the request. This is echoed back; if not provided, the service falls back internally to merchantName/email, but only the raw agentName is returned here."
+              }
             }
-          }
-        },
+          },
           "customization": {
             "type": "string",
             "description": "Custom instructions for AI collection workflow (e.g., tone, channel preferences, frequency). If not provided, the system will generate an optimal collection flow."
@@ -2614,9 +3143,12 @@
               "Deceased",
               "Filed Bankruptcy"
             ]
-          }         
+          }
         },
-        "required": ["debtorId", "status"]
+        "required": [
+          "debtorId",
+          "status"
+        ]
       },
       "CallRecording": {
         "type": "object",
@@ -2656,7 +3188,9 @@
             }
           }
         },
-        "required": ["recording_url"]
+        "required": [
+          "recording_url"
+        ]
       },
       "CleanNumbersResponse": {
         "type": "object",
@@ -2681,14 +3215,25 @@
           "group": {
             "type": "string",
             "description": "The group that was queried",
-            "enum": ["overseas", "inhouse", "sms_inbound"]
+            "enum": [
+              "overseas",
+              "inhouse",
+              "sms_inbound"
+            ]
           }
         },
-        "required": ["numbers", "count", "group"]
+        "required": [
+          "numbers",
+          "count",
+          "group"
+        ]
       },
       "Error": {
         "type": "object",
-        "required": ["code", "message"],
+        "required": [
+          "code",
+          "message"
+        ],
         "properties": {
           "code": {
             "type": "integer",
@@ -2707,12 +3252,21 @@
       },
       "TCNCallOutcome": {
         "type": "object",
-        "required": ["action", "tcn_cid", "timestamp"],
+        "required": [
+          "action",
+          "tcn_cid",
+          "timestamp"
+        ],
         "properties": {
           "action": {
             "type": "string",
             "description": "The action to be taken based on the call outcome",
-            "enum": ["end", "judge_transfer", "garnishment_transfer", "general_transfer"]
+            "enum": [
+              "end",
+              "judge_transfer",
+              "garnishment_transfer",
+              "general_transfer"
+            ]
           },
           "tcn_cid": {
             "type": "string",
@@ -2744,7 +3298,10 @@
       },
       "TCNCallOutcomeNotFound": {
         "type": "object",
-        "required": ["error", "message"],
+        "required": [
+          "error",
+          "message"
+        ],
         "properties": {
           "error": {
             "type": "string",
@@ -2786,59 +3343,145 @@
           "sms": {
             "type": "object",
             "properties": {
-              "count": { "type": "number", "description": "Number of SMS segments sent" },
-              "cost": { "type": "number", "description": "Total SMS cost" },
-              "unit_cost": { "type": "number", "description": "Cost per segment" },
-              "unit": { "type": "string", "description": "Unit type", "example": "segments" }
+              "count": {
+                "type": "number",
+                "description": "Number of SMS segments sent"
+              },
+              "cost": {
+                "type": "number",
+                "description": "Total SMS cost"
+              },
+              "unit_cost": {
+                "type": "number",
+                "description": "Cost per segment"
+              },
+              "unit": {
+                "type": "string",
+                "description": "Unit type",
+                "example": "segments"
+              }
             }
           },
           "mms": {
             "type": "object",
             "properties": {
-              "count": { "type": "number", "description": "Number of MMS segments sent" },
-              "cost": { "type": "number", "description": "Total MMS cost" },
-              "unit_cost": { "type": "number", "description": "Cost per segment" },
-              "unit": { "type": "string", "description": "Unit type", "example": "segments" }
+              "count": {
+                "type": "number",
+                "description": "Number of MMS segments sent"
+              },
+              "cost": {
+                "type": "number",
+                "description": "Total MMS cost"
+              },
+              "unit_cost": {
+                "type": "number",
+                "description": "Cost per segment"
+              },
+              "unit": {
+                "type": "string",
+                "description": "Unit type",
+                "example": "segments"
+              }
             }
           },
           "email": {
             "type": "object",
             "properties": {
-              "count": { "type": "number", "description": "Number of emails sent" },
-              "cost": { "type": "number", "description": "Total email cost" },
-              "unit_cost": { "type": "number", "description": "Cost per message" },
-              "unit": { "type": "string", "description": "Unit type", "example": "messages" }
+              "count": {
+                "type": "number",
+                "description": "Number of emails sent"
+              },
+              "cost": {
+                "type": "number",
+                "description": "Total email cost"
+              },
+              "unit_cost": {
+                "type": "number",
+                "description": "Cost per message"
+              },
+              "unit": {
+                "type": "string",
+                "description": "Unit type",
+                "example": "messages"
+              }
             }
           },
           "rvm": {
             "type": "object",
-            "description": "Ringless Voicemail — has two-part pricing (per-drop + per-hour duration)",
+            "description": "Ringless Voicemail \u2014 has two-part pricing (per-drop + per-hour duration)",
             "properties": {
-              "drops": { "type": "number", "description": "Number of voicemail drops" },
-              "drop_cost": { "type": "number", "description": "Cost from drops (drops × drop rate)" },
-              "drop_unit_cost": { "type": "number", "description": "Cost per drop" },
-              "duration_seconds": { "type": "number", "description": "Total voicemail duration in seconds" },
-              "duration_hours": { "type": "number", "description": "Total voicemail duration in hours" },
-              "duration_cost": { "type": "number", "description": "Cost from duration (hours × hourly rate)" },
-              "duration_unit_cost_per_hour": { "type": "number", "description": "Cost per hour of voicemail audio" },
-              "total_cost": { "type": "number", "description": "Combined drop + duration cost" }
+              "drops": {
+                "type": "number",
+                "description": "Number of voicemail drops"
+              },
+              "drop_cost": {
+                "type": "number",
+                "description": "Cost from drops (drops \u00d7 drop rate)"
+              },
+              "drop_unit_cost": {
+                "type": "number",
+                "description": "Cost per drop"
+              },
+              "duration_seconds": {
+                "type": "number",
+                "description": "Total voicemail duration in seconds"
+              },
+              "duration_hours": {
+                "type": "number",
+                "description": "Total voicemail duration in hours"
+              },
+              "duration_cost": {
+                "type": "number",
+                "description": "Cost from duration (hours \u00d7 hourly rate)"
+              },
+              "duration_unit_cost_per_hour": {
+                "type": "number",
+                "description": "Cost per hour of voicemail audio"
+              },
+              "total_cost": {
+                "type": "number",
+                "description": "Combined drop + duration cost"
+              }
             }
           },
           "calls_outbound": {
             "type": "object",
             "properties": {
-              "minutes": { "type": "number", "description": "Total outbound call minutes" },
-              "cost": { "type": "number", "description": "Total cost" },
-              "unit_cost": { "type": "number", "description": "Cost per minute" },
-              "unit": { "type": "string", "description": "Unit type", "example": "minutes" }
+              "minutes": {
+                "type": "number",
+                "description": "Total outbound call minutes"
+              },
+              "cost": {
+                "type": "number",
+                "description": "Total cost"
+              },
+              "unit_cost": {
+                "type": "number",
+                "description": "Cost per minute"
+              },
+              "unit": {
+                "type": "string",
+                "description": "Unit type",
+                "example": "minutes"
+              }
             }
           },
           "calls_inbound": {
             "type": "object",
             "properties": {
-              "minutes": { "type": "number", "description": "Total inbound call minutes" },
-              "cost": { "type": "number", "description": "Total cost" },
-              "unit": { "type": "string", "description": "Unit type", "example": "minutes" }
+              "minutes": {
+                "type": "number",
+                "description": "Total inbound call minutes"
+              },
+              "cost": {
+                "type": "number",
+                "description": "Total cost"
+              },
+              "unit": {
+                "type": "string",
+                "description": "Unit type",
+                "example": "minutes"
+              }
             }
           },
           "total_cost": {
@@ -2854,14 +3497,50 @@
         "example": {
           "object": "billing.usage_summary",
           "organization": "Acme Collections",
-          "period": { "start_date": "2025-02-01", "end_date": "2025-02-28" },
-          "sms": { "count": 185040, "cost": 5551.20, "unit_cost": 0.03, "unit": "segments" },
-          "mms": { "count": 4000, "cost": 120.00, "unit_cost": 0.03, "unit": "segments" },
-          "email": { "count": 15000, "cost": 0.00, "unit_cost": 0.00, "unit": "messages" },
-          "rvm": { "drops": 50000, "drop_cost": 700.00, "drop_unit_cost": 0.014, "duration_seconds": 150000, "duration_hours": 41.67, "duration_cost": 137.50, "duration_unit_cost_per_hour": 3.30, "total_cost": 837.50 },
-          "calls_outbound": { "minutes": 10000, "cost": 1080.00, "unit_cost": 0.108, "unit": "minutes" },
-          "calls_inbound": { "minutes": 5100, "cost": 1190.00, "unit": "minutes" },
-          "total_cost": 8778.70,
+          "period": {
+            "start_date": "2025-02-01",
+            "end_date": "2025-02-28"
+          },
+          "sms": {
+            "count": 185040,
+            "cost": 5551.2,
+            "unit_cost": 0.03,
+            "unit": "segments"
+          },
+          "mms": {
+            "count": 4000,
+            "cost": 120.0,
+            "unit_cost": 0.03,
+            "unit": "segments"
+          },
+          "email": {
+            "count": 15000,
+            "cost": 0.0,
+            "unit_cost": 0.0,
+            "unit": "messages"
+          },
+          "rvm": {
+            "drops": 50000,
+            "drop_cost": 700.0,
+            "drop_unit_cost": 0.014,
+            "duration_seconds": 150000,
+            "duration_hours": 41.67,
+            "duration_cost": 137.5,
+            "duration_unit_cost_per_hour": 3.3,
+            "total_cost": 837.5
+          },
+          "calls_outbound": {
+            "minutes": 10000,
+            "cost": 1080.0,
+            "unit_cost": 0.108,
+            "unit": "minutes"
+          },
+          "calls_inbound": {
+            "minutes": 5100,
+            "cost": 1190.0,
+            "unit": "minutes"
+          },
+          "total_cost": 8778.7,
           "currency": "usd"
         }
       },
@@ -2874,7 +3553,12 @@
               "type": {
                 "type": "string",
                 "description": "Error type",
-                "enum": ["invalid_request_error", "configuration_error", "access_denied", "api_error"]
+                "enum": [
+                  "invalid_request_error",
+                  "configuration_error",
+                  "access_denied",
+                  "api_error"
+                ]
               },
               "message": {
                 "type": "string",
@@ -2948,7 +3632,7 @@
           },
           "gsm7Length": {
             "type": "integer",
-            "description": "Length in GSM-7 units (extended characters such as { } [ ] ~ \\ | ^ € cost 2)."
+            "description": "Length in GSM-7 units (extended characters such as { } [ ] ~ \\ | ^ \u20ac cost 2)."
           },
           "segmentCount": {
             "type": "integer",
@@ -3100,7 +3784,30 @@
       "apiKey": {
         "type": "apiKey",
         "in": "header",
-        "name": "collectwise_key"
+        "name": "collectwise_key",
+        "description": "Active, unexpired API key belonging to an active organization. Optional organization/key signing and organization IP restrictions also apply; see API Access."
+      }
+    },
+    "parameters": {
+      "CwTimestamp": {
+        "name": "x-cw-timestamp",
+        "in": "header",
+        "required": false,
+        "description": "Required together with x-cw-signature when signing is enabled for this key or organization. POST /security/verify also requires signing whenever a usable secret exists. Canonical Unix seconds, within \u00b1300 seconds. See API Access for CW1 signing.",
+        "schema": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      },
+      "CwSignature": {
+        "name": "x-cw-signature",
+        "in": "header",
+        "required": false,
+        "description": "CW1 HMAC-SHA256 signature: v1= followed by 64 lowercase hex digits. Use the decoded 32-byte signing secret and exact request bytes. See API Access.",
+        "schema": {
+          "type": "string",
+          "pattern": "^v1=[0-9a-f]{64}$"
+        }
       }
     }
   }

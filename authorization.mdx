@@ -1,23 +1,131 @@
 ---
 title: 'API Access'
-description: 'Learn how to access and integrate with the CollectWise API'
+description: 'API keys, signed requests and optional network restrictions'
 ---
 
-## Getting Started
+{/* Publish only with the approved API security rollout. This branch does not authorize deployment. */}
 
-To access the CollectWise API, you must first contact our support team. We’ll provide the necessary details and authorization for integration. Once you have access, you can easily automate and manage your debt collection services.
+Send your API key in `collectwise_key` on authenticated routes. Keys must be active and unexpired, and their organization must be active. Live and sandbox behavior remains attached to the key. Manage keys and optional controls in the dashboard's API Keys page as an authorized active-organization administrator. Sensitive changes require recent identity verification.
 
-{/* ### Getting Started
+## Signed requests (CW1)
 
-Reach out to our support team to get your API key and setup instructions. If you need further assistance, we’re here to help. */}
+Signing is required when enabled on the key or for the organization. The signing secret is separate from the API key. It is generated as 32 random bytes and displayed once as **unpadded base64url**. Decode that value before using it as the HMAC key; do not HMAC with its text representation. Store both credentials securely and never put them in a URL or logs.
 
-<CardGroup>
+For each request, compute SHA-256 over the **exact body bytes** you will send. Empty body means zero bytes, not `{}`. Join these six fields with ASCII newline (`\n`), with **no trailing newline**:
 
-<Card title="Request API Key" icon="key" href="mailto:mohammed@collectwise.com">
-  Contact our support team to request API access.
-</Card>
-<Card title="API Reference" icon="rocket" href="/api-reference/Debtor-Object">
-  Review our integration steps and start building.
-</Card>
+```text
+CW1
+<Unix timestamp in seconds>
+<UPPERCASE HTTP method>
+<exact encoded path, beginning with />
+<exact query string, without ?>
+<lowercase hexadecimal SHA-256 body digest>
+```
 
-</CardGroup>
+Keep query ordering, repeated parameters, percent-encoding case and JSON whitespace exactly as sent. Do not decode, sort or reserialize after signing. The hostname is not included. Use UTF-8 for the canonical string. Add:
+
+- `collectwise_key`: the API key.
+- `x-cw-timestamp`: the same canonical decimal integer timestamp.
+- `x-cw-signature`: `v1=` followed by lowercase hex HMAC-SHA256 of the canonical string.
+
+The API accepts timestamps within ±300 seconds of its clock, inclusive. Synchronize your clock. Duplicate signing/authentication headers are rejected. Supported nonempty request bodies are JSON in UTF-8; compression and oversized bodies are rejected (100 KiB limit). Authentication precedes JSON parsing, after raw body capture and body-type/size checks.
+
+The Node and Python helpers below compute headers without sending a request. Pass their body Buffer/bytes unchanged to your HTTP client. Supply the API-key header separately. Prepare a fresh timestamp/signature for each new attempt.
+
+**Replay and retries:** a signature is reusable while its timestamp is accepted. These are not single-use requests; there is no nonce store. A timeout or lost response after a send can have an unknown outcome. Retrying can duplicate a voicemail, text or other action. Signing does not add send idempotency.
+
+## Test before enabling enforcement
+
+Send `POST /security/verify` with the API-key header and an empty body or `{}`. Sign those exact bytes when a usable signing secret exists, even if signing enforcement is still off.
+
+- Valid key + usable current/grace secret: a valid signature is required before any diagnostic disclosure.
+- Required signing + no usable secret: generic 401.
+- Signing off + no usable secret: signature is reported as `skipped`.
+- For an authenticated diagnostic only, an IP mismatch is reported rather than blocked. Normal business routes still enforce the allowlist.
+
+Example authenticated response (documentation-only IP):
+
+```json
+{
+  "signature": "verified",
+  "signingRequired": false,
+  "sourceIp": "203.0.113.10",
+  "ipAllowlistEnabled": false,
+  "ipMatch": false
+}
+```
+
+`ipMatch` means the observed source IP matches a saved range, independently of whether enforcement is enabled. With no saved ranges it is false. A 200 diagnostic response does not mean a business request would pass the allowlist; inspect both fields. The source IP comes from the trusted API Gateway event, never arbitrary forwarded headers. An unavailable trusted source produces a generic 503.
+
+This endpoint performs authentication/security reads only: no messaging, business/settings writes or last-used updates. Responses are `private, no-store`. It has no separate diagnostic throttle. Any API-wide request allowance will also apply to diagnostics when enabled.
+
+## Network allowlists
+
+Saved IPv4/IPv6 addresses and CIDR ranges apply to every key in the organization when enabled. Include the application's public outgoing IPs. You cannot enable an empty allowlist. The diagnostic endpoint helps check the observed IP before enforcement. All IPs in examples, such as `203.0.113.0/24`, are reserved documentation values, not proposed customer settings.
+
+## Provision, rotate and recover
+
+Provision a signing secret, configure the application, verify a signed diagnostic, then enable signing. Organization-wide signing requires every active key to have a usable secret; expired keys still marked active may need revocation. New or regenerated keys under required signing cannot call business routes until a secret is separately provisioned. Regeneration preserves expiration, environment and signing requirements and invalidates the old key and its secrets.
+
+Rotation requires an explicit choice: no grace, 24 hours or 7 days. At most one current and one unexpired previous secret are eligible. You cannot rotate again or provision a replacement while a previous secret remains in grace: wait or explicitly revoke it. Revoking the current secret does not silently revoke a separate previous secret. Expired/revoked versions cannot be used even if decryption was cached. After reveal, refresh/history can show metadata but cannot reveal the secret again. Do not automatically replay a management mutation after an uncertain response.
+
+Dashboard access is separate from the API data-plane allowlist, allowing an authorized admin to correct a lockout. Contact support if dashboard recovery is unavailable.
+
+## Errors and rate limits
+
+- **401**: invalid/inactive/expired key or required signing failure; generic response, no IP details.
+- **403**: authenticated business request outside an enforced allowlist.
+- **400/413/415**: malformed JSON, oversized or unsupported body, as applicable.
+- **503**: authentication/security dependency or trusted-metadata failure; enforcement fails closed.
+
+API request allowances are managed by CollectWise. Signing and network restrictions do not configure request limits.
+
+## Node signing helper
+
+```javascript
+const { createHash, createHmac } = require('node:crypto');
+
+// Supply the exact encoded path/query and the same bytes you send over HTTP.
+function signRequest({ secretBase64url, method, rawPath, rawQueryString = '', body = Buffer.alloc(0), timestamp = String(Math.floor(Date.now() / 1000)) }) {
+  if (typeof secretBase64url !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(secretBase64url)) throw new Error('Expected a 32-byte base64url secret');
+  const secret = Buffer.from(secretBase64url, 'base64url');
+  try {
+    if (secret.length !== 32 || secret.toString('base64url') !== secretBase64url) throw new Error('Invalid base64url secret');
+    if (!Buffer.isBuffer(body)) throw new Error('body must be the exact request Buffer');
+    if (!/^(0|[1-9][0-9]*)$/.test(timestamp) || !Number.isSafeInteger(Number(timestamp))) throw new Error('Invalid timestamp');
+    if (!/^[A-Za-z]+$/.test(method) || !rawPath.startsWith('/') || /[\r\n]/.test(rawPath + rawQueryString)) throw new Error('Invalid request target');
+    const canonical = ['CW1', timestamp, method.toUpperCase(), rawPath, rawQueryString, createHash('sha256').update(body).digest('hex')].join('\n');
+    return { 'x-cw-timestamp': timestamp, 'x-cw-signature': 'v1=' + createHmac('sha256', secret).update(canonical, 'utf8').digest('hex') };
+  } finally { secret.fill(0); }
+}
+module.exports = { signRequest };
+```
+
+## Python signing helper
+
+```python
+"""Standard-library signing helper. Does not send requests or log credentials."""
+import base64
+import hashlib
+import hmac
+import re
+import time
+
+
+def sign_request(secret_base64url, method, raw_path, raw_query_string="", body=b"", timestamp=None):
+    """Sign the exact encoded request target and bytes that will be sent."""
+    timestamp = str(int(time.time())) if timestamp is None else timestamp
+    if not isinstance(secret_base64url, str) or not re.fullmatch(r"[A-Za-z0-9_-]{43}", secret_base64url):
+        raise ValueError("Expected a 32-byte base64url secret")
+    secret = base64.urlsafe_b64decode(secret_base64url + "=")
+    if len(secret) != 32 or base64.urlsafe_b64encode(secret).decode().rstrip("=") != secret_base64url:
+        raise ValueError("Invalid base64url secret")
+    if not isinstance(body, bytes):
+        raise ValueError("body must be the exact request bytes")
+    if not isinstance(timestamp, str) or not re.fullmatch(r"0|[1-9][0-9]*", timestamp) or int(timestamp) > 9007199254740991:
+        raise ValueError("Invalid timestamp")
+    if not re.fullmatch(r"[A-Za-z]+", method) or not raw_path.startswith("/") or re.search(r"[\r\n]", raw_path + raw_query_string):
+        raise ValueError("Invalid request target")
+    canonical = "\n".join(["CW1", timestamp, method.upper(), raw_path, raw_query_string, hashlib.sha256(body).hexdigest()])
+    return {"x-cw-timestamp": timestamp, "x-cw-signature": "v1=" + hmac.new(secret, canonical.encode("utf-8"), hashlib.sha256).hexdigest()}
+```

@@ -35,7 +35,8 @@
       "group": "Get Started",
       "pages": [
         "introduction",
-        "authorization"        
+        "authorization",
+        "api-reference/endpoint/Verify-API-Security"
       ]
     },
 
