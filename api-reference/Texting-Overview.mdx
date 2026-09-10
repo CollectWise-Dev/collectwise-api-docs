@@ -71,7 +71,4 @@ Consumer replies arrive through the [Communications webhook](/api-reference/Comm
 
 ## Rate limits
 
-- **Send**: 10 requests per minute per organization.
-- **Reads** (templates, segments, status, messages): 60 requests per minute per organization.
-
-Exceeding a limit returns `429` with a `Retry-After` header.
+The previous text-specific request limits are removed with the API security rollout. API-wide request allowances are managed by CollectWise and will be documented when enabled. See [API Access](/authorization) for authentication and optional security controls.
