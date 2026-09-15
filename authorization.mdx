@@ -57,7 +57,7 @@ Example authenticated response (documentation-only IP):
 
 `ipMatch` means the observed source IP matches a saved range, independently of whether enforcement is enabled. With no saved ranges it is false. A 200 diagnostic response does not mean a business request would pass the allowlist; inspect both fields. The source IP comes from the trusted API Gateway event, never arbitrary forwarded headers. An unavailable trusted source produces a generic 503.
 
-This endpoint performs authentication/security reads only: no messaging, business/settings writes or last-used updates. Responses are `private, no-store`. It has no separate diagnostic throttle. Any API-wide request allowance will also apply to diagnostics when enabled.
+This endpoint performs no messaging, business/settings writes or last-used updates. Authenticated diagnostics count toward the organization-wide request allowance below. Responses are `private, no-store`.
 
 ## Network allowlists
 
@@ -75,10 +75,28 @@ Dashboard access is separate from the API data-plane allowlist, allowing an auth
 
 - **401**: invalid/inactive/expired key or required signing failure; generic response, no IP details.
 - **403**: authenticated business request outside an enforced allowlist.
+- **429**: organization-wide request allowance exhausted; `{"error":"Too many requests"}` with `Retry-After` in seconds.
 - **400/413/415**: malformed JSON, oversized or unsupported body, as applicable.
 - **503**: authentication/security dependency or trusted-metadata failure; enforcement fails closed.
 
-API request allowances are managed by CollectWise. Signing and network restrictions do not configure request limits.
+### Organization-wide request allowance
+
+CollectWise applies a token bucket shared by all authenticated API keys and routes in your organization, including `POST /security/verify`. Each request that reaches the limiter consumes one token when admitted. The bucket refills continuously at **50 requests per second**, up to a **3,000-request burst**. This is not a fixed per-minute quota. Deployment stages have separate buckets; keys within the same stage share the organization bucket. Health checks and CORS preflight requests are exempt.
+
+When fewer than one token is available, the API returns **429** with `{"error":"Too many requests"}` before running the requested operation. Wait at least the number of seconds in `Retry-After` before retrying, and pace requests across all your organization's clients. Prepare a fresh timestamp and signature when retrying a signed request. Retrying after a timeout or lost response can duplicate an action; see [Replay and retries](#signed-requests-cw1).
+
+When enforcement successfully checks the bucket, responses include:
+
+| Header | Meaning |
+| --- | --- |
+| `X-RateLimit-Burst` | Bucket capacity: `3000`. |
+| `X-RateLimit-Refill-Per-Second` | Refill rate: `50`. |
+| `X-RateLimit-Remaining` | Whole tokens remaining after this request's check. Shared concurrent requests can change this immediately. |
+| `Retry-After` | Seconds to wait before retrying a rate-limited request; present on limiter-generated 429 responses. |
+
+Headers are not guaranteed on every response. If the rate-limit counter store is unavailable, requests continue without rate-limit headers. Authentication and security checks still apply.
+
+CollectWise manages this policy; there are no customer-specific or endpoint-specific overrides. Signing and network restrictions do not configure request limits.
 
 ## Signing examples
 
