@@ -2344,7 +2344,7 @@
   "components": {
     "responses": {
       "RateLimitExceeded": {
-        "description": "Your organization's shared request allowance has been exceeded. The allowance replenishes at 50 requests per second, with bursts of up to 3,000 requests when capacity is available. Wait at least Retry-After seconds before retrying. See API Access for retry guidance.",
+        "description": "Your organization's shared rate limit has been exceeded. Wait at least the number of seconds specified in Retry-After before retrying.",
         "headers": {
           "Retry-After": {
             "description": "Seconds to wait before retrying.",
@@ -2359,7 +2359,7 @@
             "schema": { "type": "number", "example": 50 }
           },
           "X-RateLimit-Remaining": {
-            "description": "Requests remaining when this request was checked. Other requests from your organization can reduce this immediately.",
+            "description": "Requests remaining when this request was checked.",
             "schema": { "type": "integer", "minimum": 0 }
           }
         },

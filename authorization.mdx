@@ -81,20 +81,18 @@ Dashboard access is separate from the API data-plane allowlist, allowing an auth
 
 ### Organization-wide request allowance
 
-Your organization shares one request allowance across all API keys and authenticated endpoints, including `POST /security/verify`. The allowance replenishes continuously at **50 requests per second**, up to **3,000 available requests**. This lets you send short bursts when capacity is available. The allowance does not reset at the start of each minute.
+Your organization shares a rate limit across all API keys and authenticated endpoints. The allowance replenishes continuously at **50 requests per second**, with bursts of up to **3,000 requests** when capacity is available.
 
-When your remaining allowance is too low to accept a request, the API returns **429 Too Many Requests** with `{"error":"Too many requests"}` before running the requested operation. Wait at least the number of seconds specified in `Retry-After` before retrying, and pace requests across all your organization's clients. Prepare a fresh timestamp and signature when retrying a signed request. Retrying after a timeout or lost response can duplicate an action; see [Replay and retries](#signed-requests-cw1).
+If you receive **429 Too Many Requests**, wait at least the number of seconds specified in `Retry-After` before retrying. Pace requests across your applications to stay within the shared limit. For signed requests, generate a fresh timestamp and signature before retrying. See [retry guidance](#signed-requests-cw1) for handling timeouts and lost responses.
 
-Use these response headers to monitor your allowance and handle rate limits:
+When present, these response headers describe your allowance:
 
 | Header | Meaning |
 | --- | --- |
-| `X-RateLimit-Burst` | Maximum available request allowance: `3000`. |
-| `X-RateLimit-Refill-Per-Second` | Requests replenished per second: `50`. |
-| `X-RateLimit-Remaining` | Requests remaining when this request was checked. Other requests from your organization can reduce this immediately. |
+| `X-RateLimit-Burst` | Maximum burst allowance: `3000`. |
+| `X-RateLimit-Refill-Per-Second` | Refill rate: `50` requests per second. |
+| `X-RateLimit-Remaining` | Requests remaining when this request was checked. |
 | `Retry-After` | Seconds to wait before retrying a rate-limited request. |
-
-Rate-limit headers may not appear on every response.
 
 ## Signing examples
 
