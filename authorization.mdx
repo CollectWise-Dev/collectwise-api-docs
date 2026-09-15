@@ -57,7 +57,7 @@ Example authenticated response (documentation-only IP):
 
 `ipMatch` means the observed source IP matches a saved range, independently of whether enforcement is enabled. With no saved ranges it is false. A 200 diagnostic response does not mean a business request would pass the allowlist; inspect both fields. The source IP comes from the trusted API Gateway event, never arbitrary forwarded headers. An unavailable trusted source produces a generic 503.
 
-This endpoint performs authentication/security reads only: no messaging, business/settings writes or last-used updates. Responses are `private, no-store`. It has no separate diagnostic throttle. Any API-wide request allowance will also apply to diagnostics when enabled.
+This endpoint does not send messages or change your security settings. Authenticated diagnostics count toward the organization-wide request allowance below. Responses are `private, no-store`.
 
 ## Network allowlists
 
@@ -75,10 +75,24 @@ Dashboard access is separate from the API data-plane allowlist, allowing an auth
 
 - **401**: invalid/inactive/expired key or required signing failure; generic response, no IP details.
 - **403**: authenticated business request outside an enforced allowlist.
+- **429**: organization-wide request allowance exhausted; `{"error":"Too many requests"}` with `Retry-After` in seconds.
 - **400/413/415**: malformed JSON, oversized or unsupported body, as applicable.
 - **503**: authentication/security dependency or trusted-metadata failure; enforcement fails closed.
 
-API request allowances are managed by CollectWise. Signing and network restrictions do not configure request limits.
+### Organization-wide request allowance
+
+Your organization shares a rate limit across all API keys and authenticated endpoints. The allowance replenishes continuously at **50 requests per second**, with bursts of up to **3,000 requests** when capacity is available.
+
+If you receive **429 Too Many Requests**, wait at least the number of seconds specified in `Retry-After` before retrying. Pace requests across your applications to stay within the shared limit. For signed requests, generate a fresh timestamp and signature before retrying. See [retry guidance](#signed-requests-cw1) for handling timeouts and lost responses.
+
+When present, these response headers describe your allowance:
+
+| Header | Meaning |
+| --- | --- |
+| `X-RateLimit-Burst` | Maximum burst allowance: `3000`. |
+| `X-RateLimit-Refill-Per-Second` | Refill rate: `50` requests per second. |
+| `X-RateLimit-Remaining` | Requests remaining when this request was checked. |
+| `Retry-After` | Seconds to wait before retrying a rate-limited request. |
 
 ## Signing examples
 

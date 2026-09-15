@@ -113,6 +113,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Payments retrieved successfully",
             "content": {
@@ -191,6 +194,9 @@
           "required": true
         },
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Debtor created successfully",
             "content": {
@@ -242,6 +248,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "A list of debtors",
             "content": {
@@ -290,6 +299,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Debtor found",
             "content": {
@@ -344,6 +356,9 @@
           }
         },
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Debtor updated successfully",
             "content": {
@@ -397,6 +412,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Debtor deleted successfully",
             "content": {
@@ -446,6 +464,9 @@
           }
         },
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Bulk debtor creation response",
             "content": {
@@ -522,6 +543,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Debtor status retrieved successfully",
             "content": {
@@ -550,6 +574,9 @@
         "summary": "Get all debtor statuses",
         "description": "Retrieve the current status of all debtors",
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Debtor statuses retrieved successfully",
             "content": {
@@ -615,6 +642,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Debtor status updated successfully",
             "content": {
@@ -698,6 +728,9 @@
           }
         },
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Voicemail sent successfully",
             "content": {
@@ -768,6 +801,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Clean numbers retrieved successfully",
             "content": {
@@ -896,6 +932,9 @@
           }
         },
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "RPC call initiated successfully",
             "content": {
@@ -1000,6 +1039,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Call recording retrieved successfully",
             "content": {
@@ -1075,6 +1117,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Workflow paused successfully",
             "content": {
@@ -1146,6 +1191,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Workflow resumed successfully",
             "content": {
@@ -1229,6 +1277,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Workflow status overview returned",
             "content": { "application/json": { "schema": { "type": "object" } } }
@@ -1263,6 +1314,9 @@
           }
         },
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Per-debtor statuses returned",
             "content": { "application/json": { "schema": { "type": "object" } } }
@@ -1305,6 +1359,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Call outcome found and returned",
             "content": {
@@ -1389,6 +1446,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Usage summary retrieved successfully",
             "content": {
@@ -1437,6 +1497,9 @@
         "summary": "List SMS templates",
         "description": "Lists every SMS template available to your organization, including the placeholder variables each one expects. Call this first to discover the `templateId` and the variable names to pass to the send endpoint.",
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Templates available to your organization.",
             "content": {
@@ -1526,6 +1589,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "The template.",
             "content": {
@@ -1637,6 +1703,9 @@
           }
         },
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Segment usage for the message.",
             "content": {
@@ -1754,6 +1823,9 @@
           }
         },
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Message accepted and queued.",
             "content": {
@@ -1928,6 +2000,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Matching messages, newest first.",
             "content": {
@@ -2063,6 +2138,9 @@
           }
         ],
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Current delivery status.",
             "content": {
@@ -2125,6 +2203,9 @@
           }
         },
         "responses": {
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
           "200": {
             "description": "Authenticated diagnostics. An IP mismatch is reported here instead of denied; normal business routes still enforce it. No business/settings/last-used writes.",
             "headers": {
@@ -2261,6 +2342,39 @@
     }
   },
   "components": {
+    "responses": {
+      "RateLimitExceeded": {
+        "description": "Your organization's shared rate limit has been exceeded. Wait at least the number of seconds specified in Retry-After before retrying.",
+        "headers": {
+          "Retry-After": {
+            "description": "Seconds to wait before retrying.",
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          "X-RateLimit-Burst": {
+            "description": "Maximum available request allowance.",
+            "schema": { "type": "integer", "example": 3000 }
+          },
+          "X-RateLimit-Refill-Per-Second": {
+            "description": "Requests replenished per second.",
+            "schema": { "type": "number", "example": 50 }
+          },
+          "X-RateLimit-Remaining": {
+            "description": "Requests remaining when this request was checked.",
+            "schema": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string", "example": "Too many requests" }
+              }
+            }
+          }
+        }
+      }
+    },
     "schemas": {
       "Payment": {
         "type": "object",
