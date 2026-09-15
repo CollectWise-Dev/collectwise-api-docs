@@ -81,7 +81,7 @@ Dashboard access is separate from the API data-plane allowlist, allowing an auth
 
 ### Organization-wide request allowance
 
-Your organization shares one request allowance across all API keys and authenticated endpoints, including `POST /security/verify`. The allowance replenishes continuously at **50 requests per second**, up to **3,000 available requests**. This lets you send short bursts when capacity is available. The allowance does not reset at the start of each minute. Health checks and CORS preflight requests do not count toward it.
+Your organization shares one request allowance across all API keys and authenticated endpoints, including `POST /security/verify`. The allowance replenishes continuously at **50 requests per second**, up to **3,000 available requests**. This lets you send short bursts when capacity is available. The allowance does not reset at the start of each minute.
 
 When your remaining allowance is too low to accept a request, the API returns **429 Too Many Requests** with `{"error":"Too many requests"}` before running the requested operation. Wait at least the number of seconds specified in `Retry-After` before retrying, and pace requests across all your organization's clients. Prepare a fresh timestamp and signature when retrying a signed request. Retrying after a timeout or lost response can duplicate an action; see [Replay and retries](#signed-requests-cw1).
 
