@@ -2344,22 +2344,22 @@
   "components": {
     "responses": {
       "RateLimitExceeded": {
-        "description": "Organization-wide token bucket exhausted. Shared across authenticated API keys and routes, with a 50-request/second refill and 3,000-request burst per deployment stage. Wait at least Retry-After seconds before retrying. See API Access for retry guidance.",
+        "description": "Your organization's shared request allowance has been exceeded. The allowance replenishes at 50 requests per second, with bursts of up to 3,000 requests when capacity is available. Wait at least Retry-After seconds before retrying. See API Access for retry guidance.",
         "headers": {
           "Retry-After": {
             "description": "Seconds to wait before retrying.",
             "schema": { "type": "integer", "minimum": 1 }
           },
           "X-RateLimit-Burst": {
-            "description": "Token bucket capacity.",
+            "description": "Maximum available request allowance.",
             "schema": { "type": "integer", "example": 3000 }
           },
           "X-RateLimit-Refill-Per-Second": {
-            "description": "Tokens replenished per second.",
+            "description": "Requests replenished per second.",
             "schema": { "type": "number", "example": 50 }
           },
           "X-RateLimit-Remaining": {
-            "description": "Whole tokens remaining after this request's check.",
+            "description": "Requests remaining when this request was checked. Other requests from your organization can reduce this immediately.",
             "schema": { "type": "integer", "minimum": 0 }
           }
         },
