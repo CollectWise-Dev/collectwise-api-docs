@@ -2393,6 +2393,11 @@
             "nullable": true,
             "description": "The account reference you supplied in the placement file"
           },
+          "creditor_name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Creditor on the account this payment applies to. Reflects the account's current creditor when you make the request, so it can change if the account is updated. Null when it isn't available for the account."
+          },
           "client_name": {
             "type": "string",
             "description": "Client name the payment was collected under"
@@ -2537,6 +2542,7 @@
               "id": "pi_3RxT81GhIJk2LmNo",
               "object": "payment",
               "debtor_id": "ACC482910",
+              "creditor_name": "Lakeside Regional Hospital",
               "client_name": "Sunrise Medical Group",
               "call_id": "call_9f2ab61c3d",
               "amount": 245.16,
