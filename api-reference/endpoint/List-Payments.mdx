@@ -38,6 +38,7 @@ Cursor pages are stable: a payment recorded between two page requests cannot cau
 
 - Use `id` as your idempotency key. It is stable across polls and unique per payment. `transaction_id` may be null depending on the processor.
 - `recurrence_rule`, `total_installments`, and `next_payment_date` are set on payment-plan installments and null on one-time payments — together they distinguish "installment 3 of 12" from a one-off when posting.
+- `creditor_name` is the creditor on the account the payment applies to. It reflects the account as it is now, not a record frozen at payment time, and may be null for some accounts.
 - `phone` is derived from the originating call, falling back to the debtor record; it is null for payment-link records.
 
 ## Relationship to the Payment Received Webhook
