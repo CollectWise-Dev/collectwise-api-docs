@@ -41,6 +41,10 @@ A persisted `not_submitted` result preserves any string failure code matching `/
 
 For UUID lookup, malformed UUIDs, nonexistent IDs, and receipts belonging to another organization all return the same **404** shape without a receipt. For key lookup, a valid key with no row in the authenticated organization returns that same **404** shape, including when it identifies an intent in another organization. Neither mode reveals whether a receipt exists in another organization. A not-found response is not proof that the original send was not submitted.
 
+Except for a recognized uniqueness conflict, any database, connectivity, or query failure during the POST's initial claim INSERT triggers read-only resolution by the original organization and key, not a fresh retryable claim failure. A matching payload fingerprint returns the persisted accepted (**200**, `replayed: true`), unknown (**409**), or definite `not_submitted` (**422**, preserving the stored failure code and retryable boolean) outcome. A fingerprint mismatch returns **409** `IDEMPOTENCY_KEY_CONFLICT`, `outcome: "not_submitted"`, and `retryable: false`, without a receipt. This ambiguous-failure resolution path does not POST to the provider, atomically reclaim a claim, generate audio, or record metering; a later normal request may atomically reclaim a known `not_submitted` claim only when the typed retry rules permit it. A recognized uniqueness conflict instead follows normal duplicate-key handling, which may atomically reclaim a matching known `not_submitted` claim when those rules permit it.
+
+If the initial-claim resolution finds no row or cannot read it, including during recognized duplicate-key handling, the POST returns **409**, `outcome: "unknown"`, `code: "VOICEMAIL_SUBMISSION_UNKNOWN"`, and `retryable: false`, with a real receipt only when available and never a synthetic one. A claim INSERT whose acknowledgement was lost after commit can resolve to a submitting claim and return unknown with its UUID. These POST responses are distinct from the read-only GET's not-found or unavailable responses above; none of those unresolved responses authorizes a send.
+
 Authentication and middleware errors may be untyped. An HTTP status alone, including 429 or 5xx, never proves whether the voicemail was submitted and never authorizes a new POST. A lookup transport failure or unexpected response also leaves the send intent on hold.
 
 ## Reconcile an uncertain send
@@ -53,7 +57,7 @@ Authentication and middleware errors may be untyped. An HTTP status alone, inclu
     If the submission supplied a valid receipt UUID, use the UUID lookup. Otherwise use `GET /dropVoicemail/receipts` with the original persisted `Idempotency-Key` and authentication for the same organization. Inspect the outcome and receipt, not just the HTTP status.
   </Step>
   <Step title="Keep unresolved sends on hold">
-    Unknown outcomes and receipt read failures do not establish that nothing was sent. A POST response may omit the receipt when an existing claim or uniqueness conflict is detected but its database lookup fails; it remains `outcome: "unknown"` with `retryable: false`. Do not invent an ID, retry POST, or create a new key, even without a UUID. Use read-only key lookup; if lookup remains unknown, unavailable, or not found, retain the original intent on hold and contact support for reconciliation.
+    Unknown outcomes and receipt read failures do not establish that nothing was sent. An ambiguous initial claim INSERT failure, or a missing or unreadable claim during recognized duplicate-key handling, can leave the POST outcome unknown with `retryable: false`; a receipt may be unavailable. Do not invent an ID, retry POST, or create a new key, even without a UUID. Use read-only key lookup; if lookup remains unknown, unavailable, or not found, retain the original intent on hold and contact support for reconciliation.
   </Step>
 </Steps>
 
