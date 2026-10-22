@@ -2,3 +2,186 @@
 title: 'Drop Voicemail'
 openapi: 'POST /dropVoicemail'
 ---
+
+<Warning>
+  **Upcoming, release-gated contract.** The required `Idempotency-Key`, typed submission outcomes, and receipt lookup described on this page are an upcoming clean cutover, not a claim that they are deployed today. Publication of these docs must be coordinated with deployment of the matching API release. Migrate clients for that release; do not assume the currently deployed API implements this contract.
+</Warning>
+
+## Submission is not delivery
+
+`POST /dropVoicemail` requires authentication with `collectwise_key` and operates within that key's organization. See [API Access](/authorization) for signing and other authentication requirements.
+
+For the upcoming release, acceptance requires both a validated provider acknowledgement and a durable local receipt. Only **HTTP 200 with `outcome: "accepted"` and a valid receipt UUID** confirms acceptance. HTTP 200 alone is not sufficient. Provider acceptance does not establish voicemail delivery, a completed contact, or a contact count.
+
+```json
+{
+  "outcome": "accepted",
+  "receipt": { "id": "11111111-1111-4111-8111-111111111111" },
+  "replayed": false
+}
+```
+
+Receipt IDs are canonical UUIDs; clients must not require a particular UUID version. Receipts never expose a provider session, secret, or binding.
+
+Legacy receipts without validated claim metadata remain `outcome: "unknown"` and must stay on hold. A stored sent label or provider reference alone is not acceptance evidence. Do not retry, reset, or resend those intents to resolve the uncertainty; use read-only reconciliation or support.
+
+## One key per intended send
+
+For this upcoming contract, `Idempotency-Key` is required: an opaque value of **1–255 visible, non-space ASCII characters** (`0x21`–`0x7e`). Store it durably with the intended payload before submitting.
+
+- Reuse the **same key and identical payload** for a permitted retry of the same intended send. Never generate a fresh key on each attempt.
+- A separate, deliberate send intent needs a new key, even if its phone number and message match an earlier intent.
+- Keys are scoped to the authenticated organization, not to an individual API key. Keep the same organization when recovering an intent.
+- Delivery-affecting request fields are fingerprinted. Reusing a key with a different payload returns **409**, `outcome: "not_submitted"`, `code: "IDEMPOTENCY_KEY_CONFLICT"`, and `retryable: false`, with **no receipt**. Do not change keys to bypass this conflict.
+- Replaying an already accepted intent returns the same receipt UUID with `replayed: true`, without another provider send, audio generation, or billing action.
+- A stale submitting or unknown intent is never reset or resent by resubmission.
+
+This is local submission idempotency, **not** a promise of exactly-once remote delivery or global deduplication by phone number. Request signing is separate and does not supply send deduplication.
+
+## Request body
+
+The upcoming cutover preserves these body names and input behavior:
+
+| Field | Input |
+| --- | --- |
+| `phoneNumber` | Required nonempty string or number. |
+| `message` | Required nonempty string. |
+| `callbackNumber` | Required nonempty string or number. |
+| `voiceGender` | Exact `"female"` selects the female voice; any other value, including omission, falls back to male. |
+| `accountId` | Optional `null`, string, or number; normalized to a string or `null`. |
+| `debtorId` | Optional `null`, string, or number; normalized to a string or `null`. |
+
+E.164-style phone strings are recommended in examples; this contract does not introduce a promise of enforced E.164 validation.
+
+## Handle the outcome before considering a retry
+
+<Steps>
+  <Step title="Persist the send intent">
+    Save one key and its payload before the first POST. Preserve them across process restarts and lost responses.
+  </Step>
+  <Step title="Classify the response">
+    Inspect the response body as well as the HTTP status. Accept only the explicit accepted response with a valid receipt UUID. Treat a transport error, unexpected success body, or unclassifiable response as a hold, not as permission to send again.
+  </Step>
+  <Step title="Hold uncertain submissions">
+    If the outcome is unknown, do not retry POST with either the same key or a new key, even if no receipt UUID is available. Use [Get Voicemail Receipt](/api-reference/endpoint/Get-Voicemail-Receipt) with a returned receipt UUID or recover the receipt through read-only `GET /dropVoicemail/receipts` using the original persisted `Idempotency-Key` and authentication for the same organization. Do not invent a receipt ID.
+  </Step>
+  <Step title="Retry only an explicitly retryable pre-provider failure">
+    Only `outcome: "not_submitted"` together with `retryable: true` in a valid typed response permits a POST retry. Use bounded backoff with the identical payload and same key. Neither a failure code nor an HTTP status by itself, including 429 or 5xx, authorizes a retry.
+  </Step>
+</Steps>
+
+### Upcoming response contract
+
+| HTTP | Body and required action |
+| --- | --- |
+| **200** | `{ "outcome": "accepted", "receipt": { "id": "<UUID>" }, "replayed": false }`. An accepted replay uses the same shape with `replayed: true`. |
+| **409** | `outcome: "unknown"`, `code: "VOICEMAIL_SUBMISSION_UNKNOWN"`, `retryable: false`, with `receipt: { id: "<UUID>" }` only when available. Hold and reconcile by receipt UUID or the original persisted key; never POST retry. |
+| **409** | `outcome: "not_submitted"`, `code: "IDEMPOTENCY_KEY_CONFLICT"`, `retryable: false`, no receipt. Resolve the conflicting intent rather than resending it. |
+| **400** | `outcome: "not_submitted"`, `retryable: false`; `code` is `IDEMPOTENCY_KEY_REQUIRED` for a missing/empty key, `INVALID_IDEMPOTENCY_KEY` for an invalid key, or `VOICEMAIL_INVALID_REQUEST` for an invalid payload. |
+| **503** or **422** | Definite pre-provider failure: `outcome: "not_submitted"` and `code` is `VOICEMAIL_CLAIM_UNAVAILABLE`, `VOICEMAIL_AUDIO_UNAVAILABLE`, or `VOICEMAIL_CONFIGURATION_UNAVAILABLE`. Retryable claim/audio failures use **503** with `retryable: true`; non-retryable failures use **422** with `retryable: false`. `VOICEMAIL_CONFIGURATION_UNAVAILABLE` is always non-retryable (`retryable: false`), not a transient configuration 503. A receipt is optional and appears only if a claim exists. |
+| **422** | A persisted `not_submitted` result preserves any string failure code matching `/^VOICEMAIL_[A-Z_]+$/`, not just the examples above; `VOICEMAIL_RECEIPT_UNAVAILABLE` is another possible stored code. It uses `VOICEMAIL_NOT_SUBMITTED` when failure metadata is missing or malformed, or its code is missing or does not match that exact pattern. The stored retryable boolean is preserved independently of the code; missing or malformed retryability defaults to `retryable: false`. Only explicit `outcome: "not_submitted"` with `retryable: true` in a valid typed response can permit a bounded POST retry with the identical payload and original key; otherwise keep the intent on hold. Neither the code nor HTTP 422 alone authorizes retry. |
+
+After provider submission starts, a timeout, disconnect, provider 429/500 or other non-OK response, or malformed 2xx response is **unknown**, not proof that nothing was sent. The API returns 409 with the unknown shape above. If an existing claim or uniqueness conflict is detected but the database lookup fails, the outcome is also **unknown** with `retryable: false`, not a retryable claim failure. A receipt may be omitted when the durable claim cannot be read, including after a database error or unexpected exception; no synthetic receipt is created. Keep the intent on hold and use read-only lookup with the original persisted key, or contact support if unresolved.
+
+Authentication normally fails with 401; a fallback may return 403 with `VOICEMAIL_AUTH_REQUIRED`. Not every authentication or middleware error has a typed submission outcome. In particular, a shared pre-admission 429 without a typed outcome is **not** permission to blindly retry POST. `Retry-After` specifies timing, not send safety.
+
+### Recover a lost receipt without sending
+
+For the upcoming release, an operator can query the original persisted key when the POST response or receipt UUID is lost. This GET uses the same organization authentication and **does not contact the provider, send a voicemail, generate audio, or reset the intent**.
+
+```bash cURL
+# Use the exact key saved before the original POST, not a newly generated key.
+curl -X GET "https://api.collectwiseapi.com/dropVoicemail/receipts" \
+  -H "collectwise_key: example-api-key-not-real" \
+  -H "Idempotency-Key: example-intent-0001"
+```
+
+The credentials and key above are fake. Add fresh CW1 signing headers when signing is enabled. Keep real keys opaque and free of customer data; send the original key in the header, not the URL. Follow the [receipt lookup outcomes](/api-reference/endpoint/Get-Voicemail-Receipt#upcoming-response-contract). An unknown, missing, or unreadable receipt does not authorize a POST retry or a new key.
+
+## Upcoming client examples
+
+These examples target the release-gated contract, use synthetic phone numbers and fake credentials, and do not automatically retry POST. Add the required fresh CW1 signing headers when signing is enabled; see [API Access](/authorization#signed-requests-cw1).
+
+For the JavaScript helper, pass your **already durably stored** `{ idempotencyKey, payload }` intent record and API key. Persist the returned decision with that intent. The helper never creates a key or loops; `mayRetry` is only a signal for a separately bounded retry policy using the same stored record.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.collectwiseapi.com/dropVoicemail" \
+  -H "collectwise_key: example-api-key-not-real" \
+  -H "Idempotency-Key: example-intent-0001" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "phoneNumber": "+12025550123",
+    "message": "This is a demonstration voicemail. Please return our call.",
+    "callbackNumber": "+12025550124",
+    "voiceGender": "female",
+    "accountId": null,
+    "debtorId": null
+  }'
+```
+
+```javascript JavaScript
+const canonicalUuid =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Validate persisted failure codes without restricting them to known examples.
+const notSubmittedCode = /^VOICEMAIL_[A-Z_]+$/;
+
+// intent was persisted before the first attempt; reuse it unchanged.
+// Supply fresh CW1 headers for this attempt when signing is required.
+export async function submitVoicemailOnce(intent, apiKey, signingHeaders = {}) {
+  let response;
+  let body;
+  try {
+    response = await fetch('https://api.collectwiseapi.com/dropVoicemail', {
+      method: 'POST',
+      headers: {
+        ...signingHeaders,
+        collectwise_key: apiKey,
+        'Idempotency-Key': intent.idempotencyKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(intent.payload),
+    });
+    body = await response.json();
+  } catch {
+    // Transport failure or unreadable body: do not POST again.
+    return { action: 'hold', mayRetry: false };
+  }
+
+  const receiptId = body?.receipt?.id;
+  const validReceipt =
+    typeof receiptId === 'string' && canonicalUuid.test(receiptId);
+
+  if (response.status === 200 &&
+      body?.outcome === 'accepted' &&
+      validReceipt &&
+      typeof body.replayed === 'boolean') {
+    return { action: 'accepted', receiptId, replayed: body.replayed, mayRetry: false };
+  }
+
+  if (body?.outcome === 'unknown') {
+    // Missing/invalid receipt: use read-only lookup with the stored key.
+    return { action: 'hold', receiptId: validReceipt ? receiptId : null, mayRetry: false };
+  }
+
+  if ((response.status === 503 || response.status === 422) &&
+      body?.outcome === 'not_submitted' &&
+      typeof body.code === 'string' &&
+      notSubmittedCode.test(body.code) &&
+      typeof body.retryable === 'boolean') {
+    return {
+      action: 'not_submitted',
+      code: body.code,
+      receiptId: validReceipt ? receiptId : null,
+      mayRetry: body.retryable === true,
+    };
+  }
+
+  // Includes unexpected 2xx, untyped 429/5xx, and non-retryable errors.
+  // Retain the original intent for review; no automatic POST retry.
+  return { action: 'hold', mayRetry: false };
+}
+```
+
+</CodeGroup>

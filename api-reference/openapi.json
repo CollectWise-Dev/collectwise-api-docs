@@ -686,89 +686,96 @@
     },
     "/dropVoicemail": {
       "post": {
-        "summary": "Drop a voicemail",
-        "description": "Sends an automated voicemail to the specified phone number",
+        "summary": "Submit a voicemail",
+        "description": "Upcoming, release-gated contract: publish these docs only in coordination with deployment of this contract. Authenticated and scoped to your organization. Supply a stable Idempotency-Key for each intended send; identical payloads with the same key can be retried only under the rules below. Delivery-affecting fields are fingerprinted. An accepted replay returns the same receipt UUID without another send, audio generation, or billing; a different payload with the same key is a conflict. Stale submitting or unknown submissions never reset or resend. Local idempotency does not promise exactly-once remote delivery or global phone-number deduplication. HTTP 200 alone is insufficient: require outcome accepted, a receipt UUID, and replayed. Accepted means a validated provider acknowledgement and a durable local receipt, not confirmed delivery or a contact count. Once provider submission starts, a timeout, disconnect, provider 429/500 or other non-OK response, or malformed 2xx acknowledgement yields unknown, not a safe failure. An existing-claim uniqueness conflict followed by a failed database lookup, or a database error during an existing-claim compare-and-set, also yields unknown with retryable false, never a safe retry. Hold and reconcile unknown submissions through receipt reads or support; never POST them again with the same or a new key. If the durable claim or its UUID cannot be read, the receipt is omitted, never synthesized. Use read-only GET /dropVoicemail/receipts with the original persisted Idempotency-Key to find a lost receipt. Retry POST only when the response explicitly has outcome not_submitted and retryable true, with identical payload and the same key using bounded backoff. Status codes alone, including 429 or 5xx, never authorize a retry; shared pre-admission 429 responses lack a typed outcome. Authentication middleware errors are not guaranteed to use the voicemail outcome envelope.",
         "requestBody": {
-          "description": "Voicemail details",
+          "description": "Upcoming, release-gated voicemail submission details. E.164 phone strings are recommended, not a newly enforced format restriction.",
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": ["phoneNumber", "message", "callbackNumber"],
-                "properties": {
-                  "phoneNumber": {
-                    "type": "string",
-                    "description": "Phone number in E.164 format (e.g., +18768828822)",
-                    "pattern": "^\\+[1-9]\\d{10,14}$"
-                  },
-                  "message": {
-                    "type": "string",
-                    "description": "The voicemail message to be delivered"
-                  },
-                  "callbackNumber": {
-                    "type": "string",
-                    "description": "Callback phone number in E.164 format",
-                    "pattern": "^\\+[1-9]\\d{10,14}$"
-                  },
-                  "voiceGender": {
-                    "type": "string",
-                    "description": "Gender of the voice to use for the voicemail",
-                    "enum": ["male", "female"]
-                  }
-                }
+                "$ref": "#/components/schemas/VoicemailRequest"
               },
               "example": {
-                "phoneNumber": "+18768828822",
-                "message": "Hello, this is an important message regarding your account...",
-                "callbackNumber": "+18768828823",
-                "voiceGender": "female"
+                "phoneNumber": "+12025550123",
+                "message": "Hello, this is a synthetic voicemail example. Please call us back.",
+                "callbackNumber": "+12025550124",
+                "voiceGender": "female",
+                "accountId": "example-account",
+                "debtorId": "example-debtor"
               }
             }
           }
         },
         "responses": {
-          "429": {
-            "$ref": "#/components/responses/RateLimitExceeded"
-          },
           "200": {
-            "description": "Voicemail sent successfully",
+            "$ref": "#/components/responses/VoicemailAccepted"
+          },
+          "400": {
+            "description": "Upcoming, release-gated: missing/empty or invalid Idempotency-Key, or invalid request payload. No submission occurred; retryable is false.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Voicemail delivered successfully"
-                    }
+                  "$ref": "#/components/schemas/VoicemailInvalidRequest"
+                },
+                "examples": {
+                  "missingKey": {
+                    "value": { "outcome": "not_submitted", "code": "IDEMPOTENCY_KEY_REQUIRED", "retryable": false }
+                  },
+                  "invalidKey": {
+                    "value": { "outcome": "not_submitted", "code": "INVALID_IDEMPOTENCY_KEY", "retryable": false }
+                  },
+                  "invalidPayload": {
+                    "value": { "outcome": "not_submitted", "code": "VOICEMAIL_INVALID_REQUEST", "retryable": false }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid phone number format or missing required fields",
+          "401": {
+            "$ref": "#/components/responses/VoicemailUnauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/VoicemailForbidden"
+          },
+          "409": {
+            "description": "Upcoming, release-gated: unknown submission (hold and reconcile; never POST retry), or the same key was used for a different payload. A conflict has no receipt. Unknown has retryable false and includes only an available durable receipt; failed existing-claim lookup or compare-and-set can leave it unavailable. Never synthesize a UUID. Recover a lost receipt through read-only GET /dropVoicemail/receipts with the original persisted Idempotency-Key, or contact support.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/VoicemailSubmissionUnknown" },
+                    { "$ref": "#/components/schemas/VoicemailIdempotencyConflict" }
+                  ]
+                },
+                "examples": {
+                  "unknown": {
+                    "value": { "outcome": "unknown", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "code": "VOICEMAIL_SUBMISSION_UNKNOWN", "retryable": false }
+                  },
+                  "unknownWithoutReceipt": {
+                    "value": { "outcome": "unknown", "code": "VOICEMAIL_SUBMISSION_UNKNOWN", "retryable": false }
+                  },
+                  "keyConflict": {
+                    "value": { "outcome": "not_submitted", "code": "IDEMPOTENCY_KEY_CONFLICT", "retryable": false }
+                  }
                 }
               }
             }
           },
-          "500": {
-            "description": "Failed to deliver voicemail",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+          "422": {
+            "$ref": "#/components/responses/VoicemailNotSubmitted"
+          },
+          "429": {
+            "$ref": "#/components/responses/VoicemailRateLimitExceeded"
+          },
+          "503": {
+            "$ref": "#/components/responses/VoicemailRetryableNotSubmitted"
           }
         },
         "parameters": [
+          {
+            "$ref": "#/components/parameters/VoicemailIdempotencyKey"
+          },
           {
             "$ref": "#/components/parameters/CwTimestamp"
           },
@@ -776,6 +783,225 @@
             "$ref": "#/components/parameters/CwSignature"
           }
         ]
+      }
+    },
+    "/dropVoicemail/receipts": {
+      "get": {
+        "summary": "Find a voicemail receipt by its original key",
+        "description": "Upcoming, release-gated contract: publish these docs only in coordination with deployment of this contract. Authenticated, organization-scoped, read-only durable-claim lookup by the required Idempotency-Key header. Use the original persisted intent key when an unknown POST response omitted the receipt UUID or its response was lost; never mint a replacement key or POST retry to recover a receipt. This request never calls the provider, generates audio, bills, sends a voicemail, or resets a submission. Accepted confirms validated provider acceptance plus a durable local receipt, not delivery or a contact count; HTTP 200 alone is insufficient. Legacy receipts without validated claim metadata remain unknown; a stored sent label or provider reference alone is not acceptance evidence. Unknown remains on hold with retryable false. A recorded not_submitted result permits a bounded-backoff POST retry only if retryable is explicitly true, using the identical original payload and key. Missing rows and rows outside your organization receive the same 404 without a receipt or existence disclosure, never permission to send or retry. A database-read 503 has no outcome and must not be interpreted as not_submitted. Only durable receipt UUIDs are returned; none are synthesized. Authentication middleware errors are not guaranteed to use the voicemail outcome envelope.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/VoicemailIdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upcoming, release-gated: accepted submission found by the original key, always replayed true for a read. This is not a delivery confirmation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/VoicemailAccepted" },
+                    { "type": "object", "properties": { "replayed": { "type": "boolean", "enum": [true] } } }
+                  ]
+                },
+                "example": { "outcome": "accepted", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "replayed": true }
+              }
+            }
+          },
+          "400": {
+            "description": "Upcoming, release-gated: missing/empty or invalid Idempotency-Key. This read did not submit a voicemail and does not authorize a POST retry of the original intent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/VoicemailInvalidRequest" },
+                    { "type": "object", "properties": { "code": { "type": "string", "enum": ["IDEMPOTENCY_KEY_REQUIRED", "INVALID_IDEMPOTENCY_KEY"] } } }
+                  ]
+                },
+                "examples": {
+                  "missingKey": {
+                    "value": { "outcome": "not_submitted", "code": "IDEMPOTENCY_KEY_REQUIRED", "retryable": false }
+                  },
+                  "invalidKey": {
+                    "value": { "outcome": "not_submitted", "code": "INVALID_IDEMPOTENCY_KEY", "retryable": false }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/VoicemailUnauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/VoicemailForbidden"
+          },
+          "404": {
+            "description": "Upcoming, release-gated: no receipt for this valid key in the authenticated organization. Identical response for absent and cross-organization rows, without a receipt or existence disclosure; does not permit sending or retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoicemailReceiptNotFound"
+                },
+                "example": { "outcome": "not_submitted", "code": "VOICEMAIL_RECEIPT_NOT_FOUND", "retryable": false }
+              }
+            }
+          },
+          "409": {
+            "description": "Upcoming, release-gated: durable claim found, but submission remains unknown. Includes its durable receipt; keep on hold and reconcile, never POST retry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/VoicemailSubmissionUnknown" },
+                    { "type": "object", "required": ["receipt"] }
+                  ]
+                },
+                "example": { "outcome": "unknown", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "code": "VOICEMAIL_SUBMISSION_UNKNOWN", "retryable": false }
+              }
+            }
+          },
+          "422": {
+            "description": "Upcoming, release-gated: recorded definite pre-provider failure with a receipt, code, and stored retryable boolean. Only explicit retryable true permits a bounded-backoff POST retry with identical payload and original key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/VoicemailPreSubmissionFailure" },
+                    { "type": "object", "required": ["receipt"] }
+                  ]
+                },
+                "examples": {
+                  "retryable": {
+                    "value": { "outcome": "not_submitted", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "code": "VOICEMAIL_AUDIO_UNAVAILABLE", "retryable": true }
+                  },
+                  "nonRetryable": {
+                    "value": { "outcome": "not_submitted", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "code": "VOICEMAIL_CONFIGURATION_UNAVAILABLE", "retryable": false }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/VoicemailRateLimitExceeded"
+          },
+          "503": {
+            "description": "Upcoming, release-gated: receipt storage could not be read. No outcome or receipt is returned; do not infer not_submitted or permission to POST retry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoicemailReceiptUnavailable"
+                },
+                "example": { "code": "VOICEMAIL_RECEIPT_UNAVAILABLE", "retryable": false }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dropVoicemail/receipts/{receiptId}": {
+      "get": {
+        "summary": "Read a voicemail submission receipt",
+        "description": "Upcoming, release-gated contract: publish these docs only in coordination with deployment of this contract. Authenticated, organization-scoped, read-only lookup. This request never calls the provider, sends a voicemail, or resets a submission. Accepted confirms validated provider acceptance plus a durable local receipt, not delivery or a contact count; HTTP 200 alone is insufficient. Legacy receipts without validated claim metadata remain unknown; a stored sent label or provider reference alone is not acceptance evidence. Unknown submissions remain on hold: reconcile with receipt reads or support, never POST retry with the same or a new key. A recorded not_submitted result permits a bounded-backoff POST retry only if retryable is explicitly true, using the identical original payload and Idempotency-Key. Malformed UUIDs, missing receipts, and receipts belonging to another organization all return the same 404 without a receipt or existence disclosure; this is never permission to create or retry a send. A database-read 503 has no outcome and must not be interpreted as not_submitted. Receipt IDs are canonical UUIDs, not necessarily UUID v4; provider sessions, secrets, and bindings are never exposed. Authentication middleware errors are not guaranteed to use the voicemail outcome envelope.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/VoicemailReceiptId"
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upcoming, release-gated: accepted submission, always replayed true for a read. This is not a delivery confirmation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/VoicemailAccepted" },
+                    { "type": "object", "properties": { "replayed": { "type": "boolean", "enum": [true] } } }
+                  ]
+                },
+                "example": { "outcome": "accepted", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "replayed": true }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/VoicemailUnauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/VoicemailForbidden"
+          },
+          "404": {
+            "description": "Upcoming, release-gated: malformed UUID, missing receipt, or a receipt outside your organization. Identical response with no receipt; does not permit sending or retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoicemailReceiptNotFound"
+                },
+                "example": { "outcome": "not_submitted", "code": "VOICEMAIL_RECEIPT_NOT_FOUND", "retryable": false }
+              }
+            }
+          },
+          "409": {
+            "description": "Upcoming, release-gated: submission remains unknown. Keep on hold and reconcile; never POST retry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/VoicemailSubmissionUnknown" },
+                    { "type": "object", "required": ["receipt"] }
+                  ]
+                },
+                "example": { "outcome": "unknown", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "code": "VOICEMAIL_SUBMISSION_UNKNOWN", "retryable": false }
+              }
+            }
+          },
+          "422": {
+            "description": "Upcoming, release-gated: recorded definite pre-provider failure with a receipt, code, and retryable boolean. Only explicit retryable true permits a bounded-backoff POST retry with identical payload and original key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/VoicemailPreSubmissionFailure" },
+                    { "type": "object", "required": ["receipt"] }
+                  ]
+                },
+                "examples": {
+                  "retryable": {
+                    "value": { "outcome": "not_submitted", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "code": "VOICEMAIL_AUDIO_UNAVAILABLE", "retryable": true }
+                  },
+                  "nonRetryable": {
+                    "value": { "outcome": "not_submitted", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "code": "VOICEMAIL_CONFIGURATION_UNAVAILABLE", "retryable": false }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/VoicemailRateLimitExceeded"
+          },
+          "503": {
+            "description": "Upcoming, release-gated: receipt storage could not be read. No outcome or receipt is returned; do not infer not_submitted or permission to POST retry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoicemailReceiptUnavailable"
+                },
+                "example": { "code": "VOICEMAIL_RECEIPT_UNAVAILABLE", "retryable": false }
+              }
+            }
+          }
+        }
       }
     },
     "/clean-numbers": {
@@ -2343,6 +2569,99 @@
   },
   "components": {
     "responses": {
+      "VoicemailAccepted": {
+        "description": "Upcoming, release-gated: validated provider acknowledgement and a durable local receipt. This is acceptance, not delivery or a contact count. Require the accepted outcome and receipt; HTTP 200 alone is insufficient.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/VoicemailAccepted"
+            },
+            "examples": {
+              "accepted": {
+                "value": { "outcome": "accepted", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "replayed": false }
+              },
+              "replayed": {
+                "value": { "outcome": "accepted", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "replayed": true }
+              }
+            }
+          }
+        }
+      },
+      "VoicemailUnauthorized": {
+        "description": "Upcoming, release-gated: authentication is required. Middleware normally returns 401 for authentication failure; its response is not guaranteed to use a typed voicemail outcome envelope. Do not infer a submission outcome or permission to retry from this status."
+      },
+      "VoicemailForbidden": {
+        "description": "Upcoming, release-gated: defensive service-level authentication fallback uses VOICEMAIL_AUTH_REQUIRED without a receipt. This schema describes that fallback only; other authentication or access middleware errors are not guaranteed to use this envelope.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["outcome", "code", "retryable"],
+              "properties": {
+                "outcome": { "type": "string", "enum": ["not_submitted"] },
+                "code": { "type": "string", "enum": ["VOICEMAIL_AUTH_REQUIRED"] },
+                "retryable": { "type": "boolean", "enum": [false] }
+              }
+            },
+            "example": { "outcome": "not_submitted", "code": "VOICEMAIL_AUTH_REQUIRED", "retryable": false }
+          }
+        }
+      },
+      "VoicemailNotSubmitted": {
+        "description": "Upcoming, release-gated: definite pre-provider failure that is not recognized as transient. No POST retry is permitted. A receipt is included only if a claim exists.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                { "$ref": "#/components/schemas/VoicemailPreSubmissionFailure" },
+                { "type": "object", "properties": { "retryable": { "type": "boolean", "enum": [false] } } }
+              ]
+            },
+            "example": { "outcome": "not_submitted", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "code": "VOICEMAIL_CONFIGURATION_UNAVAILABLE", "retryable": false }
+          }
+        }
+      },
+      "VoicemailRetryableNotSubmitted": {
+        "description": "Upcoming, release-gated: recognized transient, definite pre-provider failure. Only this explicit not_submitted and retryable true response permits a bounded-backoff POST retry with identical payload and the same Idempotency-Key. A receipt is included only if a claim exists. A status code alone never permits retry.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                { "$ref": "#/components/schemas/VoicemailPreSubmissionFailure" },
+                { "type": "object", "properties": { "retryable": { "type": "boolean", "enum": [true] } } }
+              ]
+            },
+            "examples": {
+              "claimUnavailable": {
+                "value": { "outcome": "not_submitted", "code": "VOICEMAIL_CLAIM_UNAVAILABLE", "retryable": true }
+              },
+              "audioUnavailable": {
+                "value": { "outcome": "not_submitted", "receipt": { "id": "123e4567-e89b-12d3-a456-426614174000" }, "code": "VOICEMAIL_AUDIO_UNAVAILABLE", "retryable": true }
+              }
+            }
+          }
+        }
+      },
+      "VoicemailRateLimitExceeded": {
+        "description": "Upcoming, release-gated voicemail handling: the organization's shared pre-admission rate limit can return 429 without a typed submission outcome. Retry-After is a minimum wait, never automatic permission to POST retry. Only explicit outcome not_submitted and retryable true permits a bounded-backoff POST retry with identical payload and the same key. A provider 429 after submission starts is instead reported as 409 unknown; hold and reconcile it.",
+        "headers": {
+          "Retry-After": {
+            "description": "Minimum seconds to wait. This header does not authorize a POST retry.",
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string", "example": "Too many requests" }
+              }
+            }
+          }
+        }
+      },
       "RateLimitExceeded": {
         "description": "Your organization's shared rate limit has been exceeded. Wait at least the number of seconds specified in Retry-After before retrying.",
         "headers": {
@@ -3060,6 +3379,151 @@
         },
         "required": ["numbers", "count", "group"]
       },
+      "VoicemailRequest": {
+        "description": "Upcoming, release-gated voicemail request contract. Existing body names are unchanged. E.164 phone strings are recommended examples, not a newly enforced phone-format validation rule.",
+        "type": "object",
+        "required": ["phoneNumber", "message", "callbackNumber"],
+        "properties": {
+          "phoneNumber": {
+            "description": "Destination phone number: a nonempty string or a number. E.164 string form is recommended.",
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              { "type": "number" }
+            ],
+            "example": "+12025550123"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nonempty voicemail message."
+          },
+          "callbackNumber": {
+            "description": "Callback phone number: a nonempty string or a number. E.164 string form is recommended.",
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              { "type": "number" }
+            ],
+            "example": "+12025550124"
+          },
+          "voiceGender": {
+            "description": "The exact string female selects the female voice; any other value or omission uses the male fallback. Recommended values are female and male.",
+            "example": "female"
+          },
+          "accountId": {
+            "description": "Optional account reference, normalized to a string or null.",
+            "oneOf": [
+              { "type": "string", "nullable": true },
+              { "type": "number" }
+            ]
+          },
+          "debtorId": {
+            "description": "Optional debtor reference, normalized to a string or null.",
+            "oneOf": [
+              { "type": "string", "nullable": true },
+              { "type": "number" }
+            ]
+          }
+        }
+      },
+      "VoicemailReceipt": {
+        "description": "Upcoming, release-gated organization-scoped durable receipt reference. A canonical UUID, not necessarily UUID v4; never a synthetic UUID, provider session, secret, or binding. Omit the receipt when its durable UUID is unavailable.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36,
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        }
+      },
+      "VoicemailAccepted": {
+        "description": "Upcoming, release-gated accepted outcome: validated provider acknowledgement plus a durable local receipt, not delivery or a contact count. Legacy receipts without validated claim metadata remain unknown; a stored sent label or provider reference alone is not acceptance evidence. Replayed acceptance returns the same UUID with no additional send, audio generation, or billing.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["outcome", "receipt", "replayed"],
+        "properties": {
+          "outcome": { "type": "string", "enum": ["accepted"] },
+          "receipt": { "$ref": "#/components/schemas/VoicemailReceipt" },
+          "replayed": { "type": "boolean" }
+        }
+      },
+      "VoicemailSubmissionUnknown": {
+        "description": "Upcoming, release-gated uncertain submission, always retryable false. Hold and reconcile; never POST retry with the same or a new key. Receipt is optional when the durable claim or UUID is inaccessible, including an existing-claim uniqueness conflict followed by a failed database lookup, an existing-claim compare-and-set database error, or an unexpected POST exception. Never synthesize a receipt UUID. Find a lost receipt through read-only GET /dropVoicemail/receipts with the original persisted Idempotency-Key, or contact support. Successful receipt reads include the durable receipt.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["outcome", "code", "retryable"],
+        "properties": {
+          "outcome": { "type": "string", "enum": ["unknown"] },
+          "receipt": { "$ref": "#/components/schemas/VoicemailReceipt" },
+          "code": { "type": "string", "enum": ["VOICEMAIL_SUBMISSION_UNKNOWN"] },
+          "retryable": { "type": "boolean", "enum": [false] }
+        }
+      },
+      "VoicemailInvalidRequest": {
+        "description": "Upcoming, release-gated pre-submission request rejection, without a receipt. Missing or empty key is IDEMPOTENCY_KEY_REQUIRED; invalid key is INVALID_IDEMPOTENCY_KEY; invalid payload is VOICEMAIL_INVALID_REQUEST.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["outcome", "code", "retryable"],
+        "properties": {
+          "outcome": { "type": "string", "enum": ["not_submitted"] },
+          "code": { "type": "string", "enum": ["IDEMPOTENCY_KEY_REQUIRED", "INVALID_IDEMPOTENCY_KEY", "VOICEMAIL_INVALID_REQUEST"] },
+          "retryable": { "type": "boolean", "enum": [false] }
+        }
+      },
+      "VoicemailIdempotencyConflict": {
+        "description": "Upcoming, release-gated rejection of a different payload under an existing key. No receipt is included. This does not authorize retrying the original or uncertain send.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["outcome", "code", "retryable"],
+        "properties": {
+          "outcome": { "type": "string", "enum": ["not_submitted"] },
+          "code": { "type": "string", "enum": ["IDEMPOTENCY_KEY_CONFLICT"] },
+          "retryable": { "type": "boolean", "enum": [false] }
+        }
+      },
+      "VoicemailPreSubmissionFailure": {
+        "description": "Upcoming, release-gated definite pre-provider failure. A receipt is included only when a claim exists; receipt reads always include it. POST uses 503 with retryable true for recognized transient failures, otherwise 422 with retryable false. VOICEMAIL_CONFIGURATION_UNAVAILABLE is always retryable false, never a transient configuration retry. GET reports the stored failure at 422, preserving any code matching ^VOICEMAIL_[A-Z_]+$ and the stored retryable boolean. Persisted not_submitted results with missing or malformed failure metadata use VOICEMAIL_NOT_SUBMITTED. Neither a code nor an HTTP status authorizes retry. Retry POST only for explicit not_submitted and retryable true, identical payload and original key, with bounded backoff.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["outcome", "code", "retryable"],
+        "properties": {
+          "outcome": { "type": "string", "enum": ["not_submitted"] },
+          "receipt": { "$ref": "#/components/schemas/VoicemailReceipt" },
+          "code": {
+            "type": "string",
+            "pattern": "^VOICEMAIL_[A-Z_]+$",
+            "description": "Non-exhaustive known codes include VOICEMAIL_CLAIM_UNAVAILABLE, VOICEMAIL_AUDIO_UNAVAILABLE, VOICEMAIL_CONFIGURATION_UNAVAILABLE, VOICEMAIL_RECEIPT_UNAVAILABLE, and VOICEMAIL_NOT_SUBMITTED. Persisted receipt failures may use any code matching this pattern; the code alone never grants retry permission.",
+            "example": "VOICEMAIL_RECEIPT_UNAVAILABLE"
+          },
+          "retryable": { "type": "boolean" }
+        }
+      },
+      "VoicemailReceiptNotFound": {
+        "description": "Upcoming, release-gated identical response for malformed UUID, absent receipt or durable key, or cross-organization lookup. No receipt or existence disclosure; never permission to create or retry a send.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["outcome", "code", "retryable"],
+        "properties": {
+          "outcome": { "type": "string", "enum": ["not_submitted"] },
+          "code": { "type": "string", "enum": ["VOICEMAIL_RECEIPT_NOT_FOUND"] },
+          "retryable": { "type": "boolean", "enum": [false] }
+        }
+      },
+      "VoicemailReceiptUnavailable": {
+        "description": "Upcoming, release-gated receipt-read failure. No outcome or receipt is returned; never infer not_submitted or permission to POST retry.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "retryable"],
+        "properties": {
+          "code": { "type": "string", "enum": ["VOICEMAIL_RECEIPT_UNAVAILABLE"] },
+          "retryable": { "type": "boolean", "enum": [false] }
+        }
+      },
       "Error": {
         "type": "object",
         "required": ["code", "message"],
@@ -3479,6 +3943,33 @@
       }
     },
     "parameters": {
+      "VoicemailIdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Upcoming, release-gated: opaque 1-255 visible non-space ASCII characters (0x21-0x7e), stable per intended send and scoped to the authenticated organization. POST fingerprints delivery-affecting fields: identical payload and the same key are required for permitted retries; a new deliberate send intent requires a new key. An accepted POST replay returns the same UUID with no additional send, audio generation, or billing. Different POST payload with the same key yields 409 IDEMPOTENCY_KEY_CONFLICT without a receipt. GET /dropVoicemail/receipts uses the original persisted intent key only for a read-only lookup, including recovery of a lost receipt UUID; do not generate a replacement key. Never POST retry an unknown submission with either the same or a new key. Local idempotency is not an exactly-once remote delivery or global phone-number deduplication guarantee.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[\\x21-\\x7e]+$"
+        },
+        "example": "voicemail-example-send-001"
+      },
+      "VoicemailReceiptId": {
+        "name": "receiptId",
+        "in": "path",
+        "required": true,
+        "description": "Upcoming, release-gated: canonical receipt UUID owned by the authenticated organization; not necessarily UUID v4. Malformed, missing, and cross-organization IDs all receive the same 404 without a receipt or existence disclosure.",
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "minLength": 36,
+          "maxLength": 36,
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "example": "123e4567-e89b-12d3-a456-426614174000"
+      },
       "CwTimestamp": {
         "name": "x-cw-timestamp",
         "in": "header",

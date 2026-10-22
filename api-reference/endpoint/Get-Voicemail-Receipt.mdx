@@ -1,0 +1,96 @@
+---
+title: 'Get Voicemail Receipt'
+openapi: 'GET /dropVoicemail/receipts/{receiptId}'
+---
+
+<Warning>
+  **Upcoming, release-gated endpoints.** Both receipt lookup modes and the typed outcomes below are part of the upcoming voicemail submission cutover, not a claim of current availability. Publication of these docs must be coordinated with deployment of the matching API release. Do not assume the currently deployed API implements this contract.
+</Warning>
+
+## Read a submission receipt without sending
+
+For the upcoming release, both lookup modes require `collectwise_key` authentication and are scoped to that key's organization. See [API Access](/authorization) for signing requirements.
+
+| Lookup mode | Request |
+| --- | --- |
+| Receipt UUID available | `GET /dropVoicemail/receipts/{receiptId}` with the UUID returned by [Drop Voicemail](/api-reference/endpoint/Drop-Voicemail). This mode does not require an `Idempotency-Key` header. |
+| Receipt UUID missing or response lost | `GET /dropVoicemail/receipts` with the **required `Idempotency-Key` header containing the original durably persisted send-intent key**. Use the same organization as the original POST. Do not generate a replacement key. |
+
+For key lookup, the header follows the submission key format: **1–255 visible, non-space ASCII characters** (`0x21`–`0x7e`). Supply the key in the header, not a query string or URL path.
+
+Both endpoints are **read-only**: they do not contact the provider, send a voicemail, generate audio, or reset an intent. A stale submitting or unknown intent is not reset or resent. A receipt describes submission acceptance, not confirmed delivery or a completed contact/contact count.
+
+Receipt IDs are canonical UUIDs without a guaranteed UUID version. Responses never expose a provider session, secret, or binding. Lookups cannot reveal another organization's receipts; a different API key grants access only if it belongs to the original organization. Keep keys opaque and free of customer data, and protect authentication headers and real intent keys in logs or support exchanges.
+
+## Upcoming response contract
+
+Both lookup modes use the following outcome/status contract. A successful key lookup recovers the existing receipt; it does not create one.
+
+Legacy receipts without validated claim metadata return **409** with `outcome: "unknown"` and remain on hold. A stored sent label or provider reference alone is not acceptance evidence. Lookup does not reset or backfill those intents; do not retry POST or create a new key to resolve the uncertainty. Use read-only reconciliation or support.
+
+| HTTP | Response | Client action |
+| --- | --- | --- |
+| **200** | `{ "outcome": "accepted", "receipt": { "id": "<UUID>" }, "replayed": true }` | Record provider acceptance only after checking the explicit outcome and valid receipt UUID. This is not a delivery confirmation. |
+| **409** | `{ "outcome": "unknown", "receipt": { "id": "<UUID>" }, "code": "VOICEMAIL_SUBMISSION_UNKNOWN", "retryable": false }` | Keep the send intent on hold. Do not POST again with either the same key or a new key; reconcile through read-only lookup or support. |
+| **422** | `{ "outcome": "not_submitted", "receipt": { "id": "<UUID>" }, "code": "<failure code>", "retryable": false }` or the same shape with `retryable: true` | Inspect the typed outcome, failure code, and boolean. Only an explicitly retryable pre-provider failure can permit a separately bounded POST retry with the identical payload and original key. |
+| **400** | `{ "outcome": "not_submitted", "code": "IDEMPOTENCY_KEY_REQUIRED", "retryable": false }` or the same shape with `code: "INVALID_IDEMPOTENCY_KEY"` | For key lookup only: provide the original persisted key in the required header; do not replace the intent or retry POST. No receipt is returned. |
+| **404** | `{ "outcome": "not_submitted", "code": "VOICEMAIL_RECEIPT_NOT_FOUND", "retryable": false }` | No receipt is returned. This is not permission to create a new intent or retry a send. |
+| **503** | `{ "code": "VOICEMAIL_RECEIPT_UNAVAILABLE", "retryable": false }` | The receipt could not be read. There is no submission `outcome` to infer; hold the send intent. This does not authorize POST. |
+
+A persisted `not_submitted` result preserves any string failure code matching `/^VOICEMAIL_[A-Z_]+$/`. Known examples include `VOICEMAIL_CLAIM_UNAVAILABLE`, `VOICEMAIL_AUDIO_UNAVAILABLE`, `VOICEMAIL_CONFIGURATION_UNAVAILABLE`, `VOICEMAIL_NOT_SUBMITTED`, and `VOICEMAIL_RECEIPT_UNAVAILABLE`; this is not an exhaustive list. The fallback is `VOICEMAIL_NOT_SUBMITTED` when failure metadata is missing or malformed, or its code is missing or does not match that exact pattern. The stored retryable boolean is preserved independently of the code; missing or malformed retryability defaults to `retryable: false`. The API's configuration failure (`VOICEMAIL_CONFIGURATION_UNAVAILABLE`) is always non-retryable (`retryable: false`), not a transient configuration 503. Neither the failure code nor a read response's HTTP status is a send-retry decision: even a 422 must be interpreted using its explicit `outcome` and `retryable` fields. Only `outcome: "not_submitted"` together with `retryable: true` in a valid typed response can permit a separately bounded POST retry with the identical payload and original key; otherwise keep the intent on hold. See the [submission retry rules](/api-reference/endpoint/Drop-Voicemail#handle-the-outcome-before-considering-a-retry).
+
+For UUID lookup, malformed UUIDs, nonexistent IDs, and receipts belonging to another organization all return the same **404** shape without a receipt. For key lookup, a valid key with no row in the authenticated organization returns that same **404** shape, including when it identifies an intent in another organization. Neither mode reveals whether a receipt exists in another organization. A not-found response is not proof that the original send was not submitted.
+
+Authentication and middleware errors may be untyped. An HTTP status alone, including 429 or 5xx, never proves whether the voicemail was submitted and never authorizes a new POST. A lookup transport failure or unexpected response also leaves the send intent on hold.
+
+## Reconcile an uncertain send
+
+<Steps>
+  <Step title="Keep the original intent">
+    Retain the original organization's idempotency key and exact payload. Do not replace the key or submit again merely to discover the outcome.
+  </Step>
+  <Step title="Read by UUID or original key">
+    If the submission supplied a valid receipt UUID, use the UUID lookup. Otherwise use `GET /dropVoicemail/receipts` with the original persisted `Idempotency-Key` and authentication for the same organization. Inspect the outcome and receipt, not just the HTTP status.
+  </Step>
+  <Step title="Keep unresolved sends on hold">
+    Unknown outcomes and receipt read failures do not establish that nothing was sent. A POST response may omit the receipt when an existing claim or uniqueness conflict is detected but its database lookup fails; it remains `outcome: "unknown"` with `retryable: false`. Do not invent an ID, retry POST, or create a new key, even without a UUID. Use read-only key lookup; if lookup remains unknown, unavailable, or not found, retain the original intent on hold and contact support for reconciliation.
+  </Step>
+</Steps>
+
+## Upcoming lookup examples
+
+These examples target the release-gated endpoints and use a synthetic UUID, fake intent key, and fake API key. Add fresh CW1 signing headers when signing is enabled.
+
+### Recover by the original persisted key
+
+Use this mode when the POST response or receipt UUID was lost. `example-intent-0001` represents the exact key saved **before** the original POST, not a new key chosen for lookup.
+
+```bash cURL
+curl -X GET "https://api.collectwiseapi.com/dropVoicemail/receipts" \
+  -H "collectwise_key: example-api-key-not-real" \
+  -H "Idempotency-Key: example-intent-0001"
+```
+
+Keep the original payload and key while reconciling. No response from this lookup authorizes a new send merely because the receipt was lost; unknown, unavailable, or not-found results remain on hold.
+
+### Read by receipt UUID
+
+This mode does not require or replace the original POST's `Idempotency-Key`.
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET \
+  "https://api.collectwiseapi.com/dropVoicemail/receipts/11111111-1111-4111-8111-111111111111" \
+  -H "collectwise_key: example-api-key-not-real"
+```
+
+```json Accepted receipt
+{
+  "outcome": "accepted",
+  "receipt": { "id": "11111111-1111-4111-8111-111111111111" },
+  "replayed": true
+}
+```
+
+</CodeGroup>
