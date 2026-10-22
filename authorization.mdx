@@ -32,7 +32,11 @@ The API accepts timestamps within ±300 seconds of its clock, inclusive. Synchro
 
 The [Node.js and Python examples](#signing-examples) below compute headers without sending a request. Pass their body Buffer/bytes unchanged to your HTTP client. Supply the API-key header separately. Prepare a fresh timestamp/signature for each new attempt.
 
-**Replay and retries:** a signature is reusable while its timestamp is accepted. These are not single-use requests; there is no nonce store. A timeout or lost response after a send can have an unknown outcome. Retrying can duplicate a voicemail, text or other action. Signing does not add send idempotency.
+**Replay and retries:** a signature is reusable while its timestamp is accepted. These are not single-use requests; there is no nonce store. A timeout or lost response after a send can have an unknown outcome. Signing does not supply send deduplication and is distinct from an `Idempotency-Key`. Retrying an action without an endpoint-specific safe retry contract can duplicate a voicemail, text or other action.
+
+<Warning>
+  **Upcoming, release-gated voicemail migration:** the required `Idempotency-Key`, typed submission outcomes, and receipt lookup in [Drop Voicemail](/api-reference/endpoint/Drop-Voicemail) and [Get Voicemail Receipt](/api-reference/endpoint/Get-Voicemail-Receipt) are an upcoming clean cutover, not a claim of current deployment. Publication of these docs must be coordinated with deployment of the matching API release. For that release, persist one key per intended send within the organization; reuse the identical payload and same key only when the response explicitly says `outcome: "not_submitted"` and `retryable: true`, with bounded backoff. Unknown outcomes, transport failures, unexpected 2xx bodies, and untyped 429/5xx responses must be held for receipt lookup or support reconciliation, not POST retried with either the same key or a new one. If a receipt is missing, retain the original key and contact support; do not invent an ID. A fresh signature authenticates an attempt but does not make a resend safe.
+</Warning>
 
 ## Test before enabling enforcement
 
@@ -83,7 +87,7 @@ Dashboard access is separate from the API data-plane allowlist, allowing an auth
 
 Your organization shares a rate limit across all API keys and authenticated endpoints. The allowance replenishes continuously at **50 requests per second**, with bursts of up to **3,000 requests** when capacity is available.
 
-If you receive **429 Too Many Requests**, wait at least the number of seconds specified in `Retry-After` before retrying. Pace requests across your applications to stay within the shared limit. For signed requests, generate a fresh timestamp and signature before retrying. See [retry guidance](#signed-requests-cw1) for handling timeouts and lost responses.
+If you receive **429 Too Many Requests**, `Retry-After` specifies the minimum wait before any otherwise-permitted retry; it does not establish that a send is safe to repeat. Pace requests across your applications to stay within the shared limit. In the upcoming release-gated voicemail contract, a shared pre-admission 429 without a typed submission outcome is not permission to retry `POST /dropVoicemail`: only explicit `outcome: "not_submitted"` and `retryable: true` permits a bounded retry with the identical payload and same key. For any permitted signed retry, generate a fresh timestamp and signature. See [retry guidance](#signed-requests-cw1) for timeouts and lost responses.
 
 When present, these response headers describe your allowance:
 
