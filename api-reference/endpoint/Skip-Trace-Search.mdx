@@ -1,0 +1,96 @@
+---
+title: 'Skip Trace a Debtor'
+openapi: 'POST /skip-trace'
+---
+
+Searches for one debtor and returns what is new. Read the [Skip Trace Overview](/api-reference/Skip-Trace-Overview) first: it explains the two search types, which `skip_types` each supports, what each result section contains, and how matching and billing work.
+
+## Required and optional fields
+
+| Field | Required | Notes |
+|---|---|---|
+| `reference_id` | Yes | Your account number, 1-64 printable characters. Returned unchanged on the result |
+| `skip_types` | No | What to return. Defaults to `["phone", "address"]` |
+| `first_name`, `last_name` | Depends | Required by every identity rule except SSN only on a full search. Up to 64 characters each |
+| `middle_name` | No | Up to 64 characters |
+| `ssn` | Depends | 9 digits; dashes and spaces are removed. Full search only; ignored on contact search |
+| `dob` | No | `YYYY-MM-DD` or `M/D/YYYY`. A date on or before `1901-01-01` is treated as a placeholder and ignored |
+| `address` | Depends | `line1`, `unit`, `city`, `state` (2 letters), `zip` (5 or 9 digits). Needs a `zip`, or a `city` and `state` |
+| `phones` | No | Up to 5 numbers you already have, 10 digits each. They are used to find the person and are returned in `known_phones`, not `phones` |
+| `emails` | No | Up to 5 email addresses you already have. Contact search only; a full search returns `400` |
+| `max_phones`, `max_addresses` | No | 1-10. How many new phone numbers and addresses to return |
+| `force` | No | `true` runs and bills a fresh search instead of returning a stored result from the last 30 days |
+
+"Depends" fields are required in the combinations listed under [What you need to send](/api-reference/Skip-Trace-Overview#what-you-need-to-send). Unknown fields are rejected with `400`.
+
+## Examples
+
+Full search with every check:
+
+```json
+{
+  "reference_id": "ACCT-100234",
+  "skip_types": ["phone", "address", "bankruptcy", "deceased"],
+  "first_name": "ALEX",
+  "last_name": "EXAMPLE",
+  "ssn": "123-45-6789",
+  "address": { "line1": "123 MAIN ST", "city": "MCKINNEY", "state": "TX", "zip": "75070" },
+  "phones": ["2025550101"]
+}
+```
+
+Contact search for new contact details:
+
+```json
+{
+  "reference_id": "ACCT-100234",
+  "skip_types": ["phone", "address", "email"],
+  "first_name": "ALEX",
+  "last_name": "EXAMPLE",
+  "phones": ["2025550101"],
+  "emails": ["alex@example.com"]
+}
+```
+
+Bankruptcy check only, on either search type:
+
+```json
+{
+  "reference_id": "ACCT-100234",
+  "skip_types": ["bankruptcy"],
+  "first_name": "ALEX",
+  "last_name": "EXAMPLE",
+  "address": { "line1": "123 MAIN ST", "city": "MCKINNEY", "state": "TX", "zip": "75070" }
+}
+```
+
+## Errors
+
+Most errors use the object envelope:
+
+```json
+{ "error": { "type": "invalid_request_error", "message": "Invalid request field.", "param": "identity" } }
+```
+
+`param` is omitted when no single field applies, such as `idempotency_conflict`.
+
+`401` and `415` use a flat body with one message string, with no `type` and no `param`:
+
+```json
+{ "error": "Unauthorized" }
+```
+
+| Status | `type` | Body | When |
+|---|---|---|---|
+| `400` | `invalid_request_error` | object | A field is invalid or unknown, or the request does not identify a person (`param: "identity"`). For an invalid known field `param` names that field. For an unknown key `param` names the containing object, `body` or `address`, not the key |
+| `401` | none | flat | The API key is missing or invalid. The body is `{ "error": "Unauthorized" }` |
+| `403` | `access_denied` | object | Skip Trace is not enabled for your organization, or a requested `skip_type` is not available to it (`param: "skip_types"`). Both causes return the same message, so branch on `param: "skip_types"` |
+| `403` | `configuration_error` | object | Your organization's billing is not set up. Contact us |
+| `409` | `idempotency_conflict` | object | The `Idempotency-Key` was already used with a different body |
+| `409` | `request_in_progress` | object | A request with the same key is still running. Retry after `Retry-After` seconds |
+| `409` | `request_unknown` | object | A previous attempt with this key ended without a known outcome. Contact us rather than retrying with a new key, so the search is not paid for twice |
+| `415` | none | flat | The request body is not sent as `application/json`. The body is `{ "error": "Content-Type must be application/json" }` |
+| `429` | `daily_cap_exceeded` | object | Your organization's daily search limit is used up. `Retry-After` is the seconds until the next UTC midnight |
+| `502` | `provider_error` | object | The data source returned an error. Nothing is billed. You may retry |
+| `504` | `provider_timeout` | object | The data source did not answer in time. Nothing is billed. The outcome is held for review, so a retry with the same `Idempotency-Key` returns `409` with `request_unknown`. Contact us rather than retrying with a new key |
+| `500` | `api_error` | object | Unexpected error |

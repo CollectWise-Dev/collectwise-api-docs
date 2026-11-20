@@ -1,0 +1,12 @@
+---
+title: 'Get a Skip Trace'
+openapi: 'GET /skip-trace/{id}'
+---
+
+Returns a search you already ran, exactly as it was first returned, including the same selection of phone numbers and addresses. Reading a result is free and never runs a new search.
+
+A stored result from a repeat search has its own `id` and can be read back the same way. Its `cached` and `cache_source` are the values that record was first returned with.
+
+A live key reads live searches and a sandbox key reads sandbox searches. An `id` that belongs to another organization, or to the other key mode, returns `404` with `{"error":{"type":"not_found","message":"Skip trace not found."}}`.
+
+To check a debtor again with current data, send a new [Skip Trace a Debtor](/api-reference/endpoint/Skip-Trace-Search) request with `force: true`. Without `force`, a repeat within 30 days returns a stored result when the identity matches and that result's `skip_types` cover the request.

@@ -97,6 +97,14 @@
       ]
     },
     {
+      "group": "Skip Trace",
+      "pages": [
+        "api-reference/Skip-Trace-Overview",
+        "api-reference/endpoint/Skip-Trace-Search",
+        "api-reference/endpoint/Skip-Trace-Get"
+      ]
+    },
+    {
       "group": "Billing",
       "pages": [
         "api-reference/endpoint/Billing-Usage-Summary"
