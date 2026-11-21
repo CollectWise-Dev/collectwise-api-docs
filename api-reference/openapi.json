@@ -3023,15 +3023,10 @@
             "type": "object",
             "nullable": true,
             "properties": {
-              "tahoe_id": {
-                "type": "string",
-                "nullable": true,
-                "description": "Stable identifier for the matched person, full search only"
-              },
               "person_id": {
                 "type": "string",
                 "nullable": true,
-                "description": "Identifier for the matched person, contact search only"
+                "description": "Identifier for the matched person"
               },
               "name": {
                 "type": "object",

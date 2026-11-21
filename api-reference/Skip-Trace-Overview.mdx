@@ -197,7 +197,7 @@ Sending more than the minimum improves the chance of a match. In practice:
 
 When you send an SSN together with a name that does not belong to that SSN, the result is `no_hit`, so you never receive someone else's data.
 
-`match` carries the confirmed person. `match.name`, `match.dob` and `match.age` are that person's values, not an echo of what you sent. A full search also returns `tahoe_id`, a stable identifier for the person. A contact search returns `person_id` and `score` inside `match`, where `score` is the same 0-100 value as `match_score`.
+`match` carries the confirmed person. `match.name`, `match.dob` and `match.age` are that person's values, not an echo of what you sent. `match.person_id` identifies the matched person. A contact search also returns `score` inside `match`, the same 0-100 value as `match_score`.
 
 `match_score` is returned on contact search when contact details matched. It is `null` on a full search, and on a contact search that ran only `bankruptcy`.
 
