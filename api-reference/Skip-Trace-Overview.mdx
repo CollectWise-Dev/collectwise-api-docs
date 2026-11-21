@@ -1,0 +1,273 @@
+---
+title: "Skip Trace Overview"
+description: "Find a debtor's current phone numbers, addresses and email addresses, and check for bankruptcy filings and death records, one account at a time."
+---
+
+## How it works
+
+Skip Trace searches for one debtor and returns what is new: phone numbers, addresses and email addresses you did not already have, plus bankruptcy filings and death records when you ask for them. Your account is identified by your `collectwise_key` API key, sent in the header on every request.
+
+<Note>
+  Skip Trace must be enabled for your organization before these endpoints will respond. If you receive a `403` with `access_denied` on every call, contact us to have your organization enabled.
+</Note>
+
+A typical integration is:
+
+<Steps>
+  <Step title="Search">
+    Call [Skip Trace a Debtor](/api-reference/endpoint/Skip-Trace-Search) with your account number as `reference_id`, what you know about the debtor, and the `skip_types` you want back. The search runs while you wait and returns the result in the response.
+  </Step>
+  <Step title="Store the result">
+    Save the returned `id` against your account. A result with `status: "hit"` carries the matched person and the new data you asked for.
+  </Step>
+  <Step title="(Optional) Read it back">
+    Call [Get a Skip Trace](/api-reference/endpoint/Skip-Trace-Get) with the `id` to fetch the same result again later. Reading a result back is free.
+  </Step>
+</Steps>
+
+## Search types
+
+Your organization is set up for one of two search types. The search type decides which `skip_types` you can request and what comes back. Ask us which one your account uses.
+
+| | Full search | Contact search |
+|---|---|---|
+| Phone numbers | Up to 10 new, with carrier | Up to 5 new |
+| Addresses | Up to 10 new | Up to 5 new |
+| Email addresses | Not available | Up to 5 new |
+| Bankruptcy filings | Available | Available |
+| Death records and relatives | Available | Not available |
+| Search by SSN | Available, including SSN only | Not available. An SSN is accepted and ignored |
+| Match score (0-100) | Not returned | Returned as `match_score` when contact details matched |
+
+## Choosing what comes back
+
+You decide what each search returns with `skip_types`. Send any combination of:
+
+| Skip type | Returns | Search type |
+|---|---|---|
+| `phone` | New phone numbers in `phones`, and the current status of the numbers you sent in `known_phones` | Both |
+| `address` | New addresses in `addresses` | Both |
+| `email` | New email addresses in `emails` | Contact search |
+| `bankruptcy` | Bankruptcy filings in `bankruptcy` | Both |
+| `deceased` | Death records and up to 3 relatives in `deceased` | Full search |
+
+If you omit `skip_types`, the search returns `phone` and `address`. Requesting a type your search type does not support, or one that is turned off for your organization, returns `403` with `param: "skip_types"` before anything is searched.
+
+Two more fields shape the result:
+
+- `max_phones` and `max_addresses` (1-10) cap how many new phone numbers and addresses a new search returns, newest first. Your organization has a default and a ceiling for each; a larger value is lowered to the ceiling. They do not change a stored result; see [Repeat searches](#repeat-searches).
+- `force: true` skips the stored result and runs a fresh search (see [Repeat searches](#repeat-searches)).
+
+## What a result contains
+
+### Result fields
+
+Every result carries the same top-level fields:
+
+| Field | Description |
+|---|---|
+| `object` | Always `skip_trace` |
+| `id` | The result id, used with [Get a Skip Trace](/api-reference/endpoint/Skip-Trace-Get) |
+| `reference_id` | The value you sent, unchanged |
+| `mode` | `live` or `mock`. Sandbox keys always return `mock` |
+| `search_type` | `person` for full search, `contact_enrichment` for contact search |
+| `skip_types` | The types this result was asked for |
+| `status` | `hit`, `partial`, `no_hit` or `ambiguous` |
+| `cached` | `true` when this response came from a stored result |
+| `cache_source` | `fresh` for a stored search, `idempotent` for a replay of your own body, `null` for a new search |
+| `searched_at` | When the search ran |
+| `created_at` | When this record was created |
+| `candidate_count` | How many people the search returned before matching. It can be nonzero on a `no_hit`, where `match` is `null` |
+| `provider_request_ids` | Identifiers for the request at the data source. Quote these to support |
+| `match` | The confirmed person, or `null` when no one was confirmed. See [How a match is decided](#how-a-match-is-decided) |
+| `match_score` | 0-100 on contact search when contact details matched, otherwise `null` |
+| `caller_org_id` | The organization that made the request |
+| `billed_org_id` | The organization billed for it. Usually the same as `caller_org_id`; it differs when results are billed to a parent organization |
+
+Sections you did not ask for come back empty: `phones`, `known_phones`, `addresses` and `emails` as `[]`, and `bankruptcy` and `deceased` as `null`.
+
+### Phone numbers
+
+Each entry in `phones` is a number you did not send:
+
+| Field | Description |
+|---|---|
+| `number` | 10 digits |
+| `type` | Line type string from the source, such as `Mobile`, `mobile` or `landline`. May be `null` |
+| `carrier` | Carrier name. Full search only; `null` on contact search |
+| `is_connected` | Whether the line is reported as connected. May be `null` |
+| `first_reported`, `last_reported` | The dates the number was first and last reported for this person |
+
+Numbers you sent in `phones` that the search also found come back in `known_phones`, so you also learn the current status of your own numbers. `is_connected` and `last_reported` hold the current values, and either can be `null` when the source has no status or date for that number.
+
+### Addresses
+
+Each entry in `addresses` is an address other than the one you sent, newest first: `line1`, `unit`, `city`, `state`, `zip`, `full`, `is_deliverable`, `first_reported` and `last_reported`. `full` and `is_deliverable` are filled on full search and `null` on contact search. `unit` may be an empty string when the address has no unit.
+
+### Email addresses
+
+Contact search only. Each entry in `emails` is an address you did not send: `address`, `is_validated` and `is_business`.
+
+### Bankruptcy
+
+```json
+"bankruptcy": {
+  "has_records": true,
+  "records": [
+    {
+      "case_number": "19-41234",
+      "chapter": "7",
+      "filing_date": "2019-04-02",
+      "discharge_date": "2019-08-02",
+      "dismissal_date": null,
+      "closed_date": null,
+      "reopened_date": null,
+      "dismissal_flag": false,
+      "court": "U.S. Bankruptcy Court",
+      "district": "Eastern District of Texas",
+      "attorney": "JANE SMITH",
+      "law_firm": "SMITH LAW PLLC",
+      "liability_amount": 48200,
+      "confidence": "confirmed"
+    }
+  ],
+  "unverified_candidates": 0,
+  "truncated": false
+}
+```
+
+- `has_records: false` with an empty `records` list means no filing was found for this person. That is a completed check.
+- `records` holds one entry per case, newest filing first. Use the discharge, dismissal, closed and reopened dates to tell whether a case is open.
+- `unverified_candidates` counts filings found at the same address whose parties could not be confirmed as this person. They are not returned.
+- `truncated` is `true` when more filings existed than one page of results.
+- Trustee, creditor lists and a separate case status field are not available.
+
+### Deceased
+
+Full search only.
+
+```json
+"deceased": {
+  "is_deceased": true,
+  "dates_of_death": ["2024-03-11"],
+  "source": "STATE DEATH RECORDS",
+  "relatives": [
+    { "name": "MARY A EXAMPLE", "type": "Spouse" }
+  ]
+}
+```
+
+A living person returns `is_deceased: false`; that is a completed check. `source` names the source that was checked, so it can be filled when `is_deceased` is `false`. `relatives` holds up to 3 entries. Place of death, obituary, executor of the estate and next of kin are not available.
+
+## What you need to send
+
+`reference_id` is always required. Beyond that, each search type needs enough to identify the person. A request with less is rejected with `400` and `param: "identity"`, and nothing is searched or billed.
+
+| Search type | Minimum identity |
+|---|---|
+| Full search | An `ssn`, **or** a `first_name` and `last_name` plus a `dob` or an `address` |
+| Contact search | A `first_name` and `last_name` plus at least one of: a phone in `phones`, an email in `emails`, or an `address` with `line1` and `zip` |
+| Contact search, bankruptcy only | A `first_name` and `last_name` plus an `address` with `line1` and a `zip` or `city` and `state` |
+
+Sending more than the minimum improves the chance of a match. In practice:
+
+- **Full search:** an SSN finds the person on its own. Without one, include a ZIP code or phone number; a name and date of birth alone rarely confirm a match.
+- **Contact search:** a match is accepted only when the person found shares your ZIP code, a phone number or an email address. Send everything you have, best first: only the first phone and first email are used to search.
+
+## How a match is decided
+
+`status` tells you what the search found:
+
+| `status` | Meaning |
+|---|---|
+| `hit` | Exactly one person was confirmed as your debtor. The result carries their data |
+| `partial` | The person was confirmed, but at least one requested `skip_type` could not be completed. It is listed in `unavailable`, with the reason in `unavailable_reasons` |
+| `no_hit` | No one could be confirmed. `match` is `null` and the data sections are empty, though `candidate_count` can be nonzero |
+| `ambiguous` | More than one person could be your debtor. No data is returned |
+
+`match.evidence` lists why the person was accepted:
+
+| Code | Meaning |
+|---|---|
+| `ssn` | You sent an SSN and no last name. The person is the owner of that SSN. Compare `match.name` with your records: a mistyped SSN still finds a real person |
+| `a` | You sent an SSN, and the first and last names you sent agree with the owner of that SSN |
+| `b` | The last name and full date of birth agree |
+| `c` | The last name and first name agree, and the person shares your ZIP code or a phone number |
+| `name`, `zip`, `phone`, `email`, `address` | Contact search: the names agree and the person shares the listed items with your request |
+
+When you send an SSN together with a name that does not belong to that SSN, the result is `no_hit`, so you never receive someone else's data.
+
+`match` carries the confirmed person. `match.name`, `match.dob` and `match.age` are that person's values, not an echo of what you sent. `match.person_id` identifies the matched person. A contact search also returns `score` inside `match`, the same 0-100 value as `match_score`.
+
+`match_score` is returned on contact search when contact details matched. It is `null` on a full search, and on a contact search that ran only `bankruptcy`.
+
+## Billing
+
+You are charged at most once per search, and only when it returns something useful:
+
+- A `hit` or `partial` that returned at least one new phone number, address or email address, or completed a requested `bankruptcy` or `deceased` check, is billable.
+- A `no_hit`, an `ambiguous` result, a search that only returned data you already sent, a failed search, and every sandbox search are free.
+- Rates depend on your search type and on whether the search included a `bankruptcy` or `deceased` check. See your agreement for pricing.
+
+## Repeat searches
+
+Every search is stored. What a repeat returns depends on the body you send.
+
+**Same body.** A body identical to an earlier request returns that result with the same `id`, `cached: true` and `cache_source: "idempotent"`. This holds with or without an `Idempotency-Key` header, and nothing is billed. It holds however long ago the earlier request was, including a body with `force: true`. To run a search again, send a new `Idempotency-Key` header with `force: true`.
+
+**Same identity, different body.** If the identity matches an earlier search within 30 days whose `skip_types` cover what you asked for, the API returns a stored result with `cached: true` and `cache_source: "fresh"`. The response is trimmed to the `skip_types` you requested, and unrequested sections are `null` or empty. `searched_at` comes from the search that ran. `created_at` and the `id` are new, and the new `id` can be read with [Get a Skip Trace](/api-reference/endpoint/Skip-Trace-Get). `reference_id` is not part of the identity, so the same person under a new account number still reuses the stored result.
+
+The most recent stored search that covers your request is the one returned. Asking for a `skip_type` that no stored search covered runs a new search, and that search is billed. Asking for fewer checks than an earlier search can be served free from that earlier result.
+
+`no_hit` results are stored too, so a debtor that could not be found is not searched again until the 30 days pass.
+
+`max_phones` and `max_addresses` do not reselect a stored result. The stored selection comes back as it was first returned, so the caps have no effect on a cached response. Send `force: true` with a new `Idempotency-Key` to run, and pay for, a new search with a new selection.
+
+Send an `Idempotency-Key` header (up to 128 characters) to make retries safe. Reusing a key with a different body returns `409` with `idempotency_conflict`.
+
+## Testing with a sandbox key
+
+A sandbox API key never reaches the live data source and is never billed. It returns a fixed test person:
+
+| Search type | How to get a `hit` |
+|---|---|
+| Full search | Send `first_name: "ALEX"`, `last_name: "EXAMPLE"` with `dob: "1980-01-31"`, `address: { "zip": "75070" }`, or an SSN ending in `6789` |
+| Contact search | Any name, with a phone, email or street address and ZIP. The test person takes the name and contact details you send |
+
+A full search on the sandbox:
+
+```json
+{
+  "reference_id": "ACCT-100234",
+  "skip_types": ["phone", "address", "bankruptcy", "deceased"],
+  "first_name": "ALEX",
+  "last_name": "EXAMPLE",
+  "dob": "1980-01-31",
+  "address": { "line1": "123 MAIN ST", "city": "MCKINNEY", "state": "TX", "zip": "75070" }
+}
+```
+
+A contact search on the sandbox:
+
+```json
+{
+  "reference_id": "ACCT-100234",
+  "skip_types": ["phone", "address", "email"],
+  "first_name": "ALEX",
+  "last_name": "EXAMPLE",
+  "phones": ["2025550101"],
+  "emails": ["alex@example.com"]
+}
+```
+
+A sandbox `bankruptcy` request returns one Chapter 7 filing. A sandbox `deceased` request returns `is_deceased: false` with no relatives.
+
+Some outcomes cannot be produced on the sandbox, so test those against live data: a `partial` status, a filled `unavailable` or `unavailable_reasons`, and the `429`, `502` and `504` errors.
+
+Sandbox results are stored apart from live ones: a live key cannot read a sandbox result, or the other way round.
+
+## Limits
+
+- Requests share your organization's [API rate limit](/authorization).
+- Your organization may have a daily search limit. When it is reached, searches return `429` with `daily_cap_exceeded` and a `Retry-After` header set to the next UTC midnight. Stored results, idempotent replays and sandbox searches do not count.
+- A search normally completes within a few seconds. Allow up to 30 seconds before timing out.

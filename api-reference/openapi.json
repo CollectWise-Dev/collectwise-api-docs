@@ -19,6 +19,197 @@
     }
   ],
   "paths": {
+    "/skip-trace": {
+      "post": {
+        "summary": "Skip Trace a Debtor",
+        "description": "Search for one debtor and return new phone numbers, addresses and email addresses, plus bankruptcy and death records when requested.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Up to 128 characters. The same key and body replays the original result for free; the same key with a different body returns 409.",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkipTraceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown field, or not enough to identify the person (param identity). For an invalid known field param names that field. For an unknown key param names the containing object, body or address.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key. Flat error body: {\"error\":\"Unauthorized\"}",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceSimpleError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Skip Trace not enabled, skip type not available, or billing not set up. access_denied returns the same message whether the whole product is off or only the requested skip_type; branch on param.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency conflict, request in progress, or request needs review",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Request body is not application/json. Flat error body: {\"error\":\"Content-Type must be application/json\"}",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceSimpleError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit or daily search limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Data source error. Nothing billed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceError"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Data source timeout. Nothing billed; the request is held for review",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skip-trace/{id}": {
+      "get": {
+        "summary": "Get a Skip Trace",
+        "description": "Return a search you already ran, exactly as first returned. Free.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CwTimestamp"
+          },
+          {
+            "$ref": "#/components/parameters/CwSignature"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key. Flat error body: {\"error\":\"Unauthorized\"}",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceSimpleError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No search with this id for your organization and key mode",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkipTraceError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/payments": {
       "get": {
         "summary": "List Payments",
@@ -2376,6 +2567,602 @@
       }
     },
     "schemas": {
+      "SkipTraceAddressInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "line1": {
+            "type": "string",
+            "description": "Street line",
+            "maxLength": 100
+          },
+          "unit": {
+            "type": "string",
+            "description": "Apartment, suite or unit",
+            "maxLength": 20
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "state": {
+            "type": "string",
+            "description": "2-letter state code",
+            "pattern": "^[A-Za-z]{2}$"
+          },
+          "zip": {
+            "type": "string",
+            "description": "5 or 9 digits"
+          }
+        },
+        "description": "Needs a zip, or a city and state."
+      },
+      "SkipTraceRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference_id"
+        ],
+        "properties": {
+          "reference_id": {
+            "type": "string",
+            "description": "Your account number. Returned unchanged.",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "skip_types": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "phone",
+                "address",
+                "email",
+                "bankruptcy",
+                "deceased"
+              ]
+            },
+            "default": [
+              "phone",
+              "address"
+            ],
+            "description": "What to return. email is contact search only; deceased is full search only. A type your organization cannot use returns 403 with param skip_types."
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "middle_name": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "dob": {
+            "type": "string",
+            "description": "YYYY-MM-DD or M/D/YYYY. On or before 1901-01-01 is ignored as a placeholder."
+          },
+          "ssn": {
+            "type": "string",
+            "description": "9 digits; dashes and spaces are removed. Full search only; ignored on contact search."
+          },
+          "address": {
+            "$ref": "#/components/schemas/SkipTraceAddressInput"
+          },
+          "phones": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+              "type": "string"
+            },
+            "description": "Numbers you already have, 10 digits each. Returned in known_phones when found."
+          },
+          "emails": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+              "type": "string"
+            },
+            "description": "Email addresses you already have. Contact search only."
+          },
+          "max_phones": {
+            "type": "integer",
+            "description": "How many new phone numbers to return. Defaults to your organization setting.",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "max_addresses": {
+            "type": "integer",
+            "description": "How many new addresses to return. Defaults to your organization setting.",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Run and bill a fresh search instead of returning a stored result from the last 30 days.",
+            "default": false
+          }
+        },
+        "description": "Minimum identity: full search needs an ssn, or first_name and last_name plus dob or address. Contact search needs first_name and last_name plus a phone, an email, or an address with line1 and zip. A bankruptcy-only contact search needs first_name and last_name plus an address with line1 and a zip or city and state."
+      },
+      "SkipTracePhone": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string",
+            "description": "10 digits"
+          },
+          "type": {
+            "type": "string",
+            "nullable": true,
+            "description": "Line type string from the source, such as Mobile, mobile or landline. May be null."
+          },
+          "carrier": {
+            "type": "string",
+            "nullable": true,
+            "description": "Full search only"
+          },
+          "is_connected": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "first_reported": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "last_reported": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        }
+      },
+      "SkipTraceKnownPhone": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string"
+          },
+          "is_connected": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Current status of a number you sent. Null when the source has no status for it."
+          },
+          "last_reported": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "Current last reported date of a number you sent. Null when the source has no date for it."
+          }
+        }
+      },
+      "SkipTraceAddress": {
+        "type": "object",
+        "properties": {
+          "line1": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true,
+            "description": "Apartment, suite or unit. May be an empty string when the address has no unit."
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "type": "string",
+            "nullable": true
+          },
+          "zip": {
+            "type": "string",
+            "nullable": true
+          },
+          "full": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_deliverable": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "first_reported": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "last_reported": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        }
+      },
+      "SkipTraceEmail": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "is_validated": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "is_business": {
+            "type": "boolean",
+            "nullable": true
+          }
+        }
+      },
+      "SkipTraceBankruptcyRecord": {
+        "type": "object",
+        "properties": {
+          "case_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "chapter": {
+            "type": "string",
+            "nullable": true
+          },
+          "court": {
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "attorney": {
+            "type": "string",
+            "nullable": true
+          },
+          "law_firm": {
+            "type": "string",
+            "nullable": true
+          },
+          "filing_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "discharge_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "dismissal_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "closed_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "reopened_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "dismissal_flag": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "liability_amount": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "nullable": true
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "confirmed"
+            ]
+          }
+        }
+      },
+      "SkipTraceBankruptcy": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "has_records": {
+            "type": "boolean"
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkipTraceBankruptcyRecord"
+            }
+          },
+          "unverified_candidates": {
+            "type": "integer",
+            "description": "Filings at the same address that could not be confirmed as this person. Not returned."
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "More filings existed than one page of results."
+          }
+        }
+      },
+      "SkipTraceDeceased": {
+        "type": "object",
+        "nullable": true,
+        "description": "Full search only.",
+        "properties": {
+          "is_deceased": {
+            "type": "boolean"
+          },
+          "dates_of_death": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          "source": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the source that was checked. Can be set when is_deceased is false."
+          },
+          "relatives": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "SkipTraceResult": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "skip_trace"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "Use with GET /skip-trace/{id}",
+            "format": "uuid"
+          },
+          "reference_id": {
+            "type": "string"
+          },
+          "caller_org_id": {
+            "type": "string",
+            "description": "The organization that made the request."
+          },
+          "billed_org_id": {
+            "type": "string",
+            "description": "The organization billed for the search. Usually the same as caller_org_id; differs when results are billed to a parent organization."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "mock"
+            ],
+            "description": "live or mock. Sandbox keys always return mock."
+          },
+          "search_type": {
+            "type": "string",
+            "enum": [
+              "person",
+              "contact_enrichment"
+            ],
+            "description": "person = full search, contact_enrichment = contact search"
+          },
+          "skip_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "hit",
+              "partial",
+              "no_hit",
+              "ambiguous"
+            ]
+          },
+          "cached": {
+            "type": "boolean"
+          },
+          "cache_source": {
+            "type": "string",
+            "enum": [
+              "fresh",
+              "idempotent"
+            ],
+            "nullable": true,
+            "description": "fresh = a stored search whose skip_types cover this request, idempotent = a replay of the same body, null = a new search ran"
+          },
+          "searched_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "provider_request_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifiers for the request at the data source. Quote these to support."
+          },
+          "match": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "person_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Identifier for the matched person"
+              },
+              "name": {
+                "type": "object",
+                "properties": {
+                  "first": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "middle": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "last": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              },
+              "dob": {
+                "type": "string",
+                "format": "date",
+                "nullable": true,
+                "description": "The matched person's date of birth, not an echo of the request."
+              },
+              "age": {
+                "type": "integer",
+                "nullable": true,
+                "description": "The matched person's age, not an echo of the request."
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Why the person was accepted. See the Skip Trace Overview."
+              },
+              "score": {
+                "type": "number",
+                "nullable": true,
+                "description": "0-100 match score on contact search. Same value as match_score."
+              }
+            }
+          },
+          "match_score": {
+            "type": "number",
+            "nullable": true,
+            "description": "0-100. Contact search only, and null when only bankruptcy was requested."
+          },
+          "candidate_count": {
+            "type": "integer",
+            "description": "How many people the search returned before matching. Can be nonzero on a no_hit, where match is null."
+          },
+          "phones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkipTracePhone"
+            }
+          },
+          "known_phones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkipTraceKnownPhone"
+            }
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkipTraceAddress"
+            }
+          },
+          "emails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkipTraceEmail"
+            }
+          },
+          "bankruptcy": {
+            "$ref": "#/components/schemas/SkipTraceBankruptcy"
+          },
+          "deceased": {
+            "$ref": "#/components/schemas/SkipTraceDeceased"
+          },
+          "unavailable": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Requested skip types that could not be completed"
+          },
+          "unavailable_reasons": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "deadline",
+                "provider_error",
+                "provider_timeout",
+                "not_provisioned",
+                "no_address"
+              ]
+            }
+          }
+        }
+      },
+      "SkipTraceError": {
+        "type": "object",
+        "description": "Object error envelope used by most errors.",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "param": {
+                "type": "string",
+                "nullable": true,
+                "description": "Names the field for an invalid known field, or the containing object (body or address) for an unknown key. Omitted when no single field applies."
+              }
+            }
+          }
+        }
+      },
+      "SkipTraceSimpleError": {
+        "type": "object",
+        "description": "Flat error body used by 401 and 415.",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "The error message."
+          }
+        }
+      },
       "Payment": {
         "type": "object",
         "properties": {
